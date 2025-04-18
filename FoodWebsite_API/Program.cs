@@ -19,7 +19,6 @@ namespace FoodWebsite_API
 
             var jwtSettings = builder.Configuration.GetSection("Jwt");
             var secretKey = Environment.GetEnvironmentVariable("JWT__SecretKey") ?? jwtSettings["SecretKey"];
-            Console.WriteLine($"JWT Secret Key: {secretKey}");
             if (string.IsNullOrWhiteSpace(secretKey) || secretKey.Length < 32)
             {
                 throw new InvalidOperationException("JWT SecretKey is missing or too short. Use at least 32 characters.");

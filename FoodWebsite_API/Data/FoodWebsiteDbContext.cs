@@ -74,6 +74,14 @@ namespace FoodWebsite_API.Data
                 .WithOne(d => d.TinhThanh)
                 .HasForeignKey(d => d.TinhThanhId);
 
+            modelBuilder.Entity<NguoiDungNguyenLieu>()
+                .Property(nd => nd.SoLuong)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<NguyenLieuCongThuc>()
+                .Property(nl => nl.SoLuong)
+                .HasPrecision(18, 2);
+
             // Indexes for performance & search
             modelBuilder.Entity<DacSan>()
                 .HasIndex(d => d.Ten);
