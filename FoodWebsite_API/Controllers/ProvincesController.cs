@@ -47,7 +47,6 @@ namespace FoodWebsite_API.Controllers
             // Add the new province
             _context.Provinces.Add(province);
             await _context.SaveChangesAsync();
-
             return CreatedAtAction(nameof(GetById), new { id = province.Id }, province);
         }
 
@@ -79,7 +78,6 @@ namespace FoodWebsite_API.Controllers
             return NoContent();
         }
 
-
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -90,6 +88,5 @@ namespace FoodWebsite_API.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
-
     }
 }

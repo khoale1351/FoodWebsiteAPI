@@ -8,7 +8,7 @@ namespace FoodWebsite_API.Data
     {
         public static async Task SeedRolesAsync(RoleManager<IdentityRole> roleManager)
         {
-            string[] roleNames = { "Admin", "Moderator", "Chef", "User ", "Guest" };
+            string[] roleNames = { "Admin", "Moderator", "Chef", "User", "Guest" };
 
             foreach (var role in roleNames)
             {
