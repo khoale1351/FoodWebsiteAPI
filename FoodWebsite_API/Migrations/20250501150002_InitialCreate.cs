@@ -36,7 +36,6 @@ namespace FoodWebsite_API.Migrations
                     City = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Gender = table.Column<int>(type: "int", nullable: false),
                     Address = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     Membership = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -48,6 +47,7 @@ namespace FoodWebsite_API.Migrations
                     PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     SecurityStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     PhoneNumberConfirmed = table.Column<bool>(type: "bit", nullable: false),
                     TwoFactorEnabled = table.Column<bool>(type: "bit", nullable: false),
                     LockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
@@ -60,44 +60,42 @@ namespace FoodWebsite_API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "NguyenLieus",
+                name: "Ingredients",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Ten = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    TenKhongDau = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Slug = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    MoTa = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    NamePlain = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ImageUrl = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true, defaultValueSql: "(sysdatetime())"),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_NguyenLieus", x => x.Id);
+                    table.PrimaryKey("PK__Ingredie__3214EC0710C3EF49", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "TinhThanhs",
+                name: "Provinces",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    VungMien = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    VungMienKhongDau = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    Ten = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    TenKhongDau = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Slug = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    MoTa = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    HinhAnh = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Region = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
+                    RegionPlain = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    NamePlain = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Version = table.Column<int>(type: "int", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    ImageUrl = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TinhThanhs", x => x.Id);
+                    table.PrimaryKey("PK__Province__3214EC079C64CD5E", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -207,161 +205,204 @@ namespace FoodWebsite_API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "NguoiDungNguyenLieus",
+                name: "UserIngredient",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    NguyenLieuId = table.Column<int>(type: "int", nullable: false),
-                    SoLuong = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    DonVi = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
+                    UserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    IngredientId = table.Column<int>(type: "int", nullable: false),
+                    Quantity = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
+                    Unit = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_NguoiDungNguyenLieus", x => x.Id);
+                    table.PrimaryKey("PK__UserIngr__3214EC07FDCBE32F", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_NguoiDungNguyenLieus_AspNetUsers_UserId",
+                        name: "FK__UserIngre__Ingre__07C12930",
+                        column: x => x.IngredientId,
+                        principalTable: "Ingredients",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK__UserIngre__UserI__06CD04F7",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_NguoiDungNguyenLieus_NguyenLieus_NguyenLieuId",
-                        column: x => x.NguyenLieuId,
-                        principalTable: "NguyenLieus",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "DacSans",
+                name: "Specialties",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    TinhThanhId = table.Column<int>(type: "int", nullable: false),
-                    Ten = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    TenKhongDau = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Slug = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    MoTa = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ProvinceId = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    NamePlain = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true, defaultValueSql: "(sysdatetime())"),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_DacSans", x => x.Id);
+                    table.PrimaryKey("PK__Specialt__3214EC07234229EE", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_DacSans_TinhThanhs_TinhThanhId",
-                        column: x => x.TinhThanhId,
-                        principalTable: "TinhThanhs",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        name: "FK__Specialti__Provi__6477ECF3",
+                        column: x => x.ProvinceId,
+                        principalTable: "Provinces",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
-                name: "CongThucs",
+                name: "Ratings",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    DacSanId = table.Column<int>(type: "int", nullable: false),
-                    Ten = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    TenKhongDau = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    Slug = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    IsChinhGoc = table.Column<bool>(type: "bit", nullable: false),
-                    HuongDan = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ThoiGianChuanBi = table.Column<int>(type: "int", nullable: false),
-                    ThoiGianNau = table.Column<int>(type: "int", nullable: false),
-                    MoTa = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    IsApproved = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    SpecialtyId = table.Column<int>(type: "int", nullable: false),
+                    Stars = table.Column<int>(type: "int", nullable: false),
+                    Comment = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true, defaultValueSql: "(sysdatetime())"),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CongThucs", x => x.Id);
+                    table.PrimaryKey("PK__Ratings__3214EC0734E80E58", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CongThucs_DacSans_DacSanId",
-                        column: x => x.DacSanId,
-                        principalTable: "DacSans",
+                        name: "FK__Ratings__Special__6D0D32F4",
+                        column: x => x.SpecialtyId,
+                        principalTable: "Specialties",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK__Ratings__UserId__6C190EBB",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "DacSanImages",
+                name: "Recipes",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    DacSanId = table.Column<int>(type: "int", nullable: false),
-                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    SpecialtyId = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    NamePlain = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    IsOriginal = table.Column<bool>(type: "bit", nullable: false),
+                    PrepareTime = table.Column<int>(type: "int", nullable: true),
+                    CookingTime = table.Column<int>(type: "int", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    IsApproved = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true, defaultValueSql: "(sysdatetime())"),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_DacSanImages", x => x.Id);
+                    table.PrimaryKey("PK__Recipes__3214EC0793125680", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_DacSanImages_DacSans_DacSanId",
-                        column: x => x.DacSanId,
-                        principalTable: "DacSans",
+                        name: "FK__Recipes__Special__7B5B524B",
+                        column: x => x.SpecialtyId,
+                        principalTable: "Specialties",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "SpecialtyImages",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    SpecialtyId = table.Column<int>(type: "int", nullable: false),
+                    ImageUrl = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK__Specialt__3214EC0723A4446A", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK__Specialty__Speci__6754599E",
+                        column: x => x.SpecialtyId,
+                        principalTable: "Specialties",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "Reviews",
+                name: "RecipeIngredient",
+                columns: table => new
+                {
+                    RecipeId = table.Column<int>(type: "int", nullable: false),
+                    IngredientId = table.Column<int>(type: "int", nullable: false),
+                    Quantity = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
+                    Unit = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RecipeIngredient", x => new { x.RecipeId, x.IngredientId });
+                    table.ForeignKey(
+                        name: "FK__RecipeIng__Ingre__02FC7413",
+                        column: x => x.IngredientId,
+                        principalTable: "Ingredients",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK__RecipeIng__Recip__02084FDA",
+                        column: x => x.RecipeId,
+                        principalTable: "Recipes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RecipeStep",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RecipeId = table.Column<int>(type: "int", nullable: false),
+                    StepNumber = table.Column<int>(type: "int", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ImageUrl = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK__RecipeSt__3214EC078E336CCD", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK__RecipeSte__Recip__7E37BEF6",
+                        column: x => x.RecipeId,
+                        principalTable: "Recipes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserFavoriteRecipes",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    DacSanId = table.Column<int>(type: "int", nullable: false),
-                    SoSao = table.Column<int>(type: "int", nullable: false),
-                    BinhLuan = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    RecipeId = table.Column<int>(type: "int", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "(sysdatetime())")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Reviews", x => x.Id);
+                    table.PrimaryKey("PK__UserFavo__3214EC07EF504CAE", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Reviews_AspNetUsers_UserId",
+                        name: "FK__UserFavor__Recip__114A936A",
+                        column: x => x.RecipeId,
+                        principalTable: "Recipes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK__UserFavor__UserI__10566F31",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_Reviews_DacSans_DacSanId",
-                        column: x => x.DacSanId,
-                        principalTable: "DacSans",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "NguyenLieuCongThucs",
-                columns: table => new
-                {
-                    CongThucId = table.Column<int>(type: "int", nullable: false),
-                    NguyenLieuId = table.Column<int>(type: "int", nullable: false),
-                    SoLuong = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    DonVi = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_NguyenLieuCongThucs", x => new { x.CongThucId, x.NguyenLieuId });
-                    table.ForeignKey(
-                        name: "FK_NguyenLieuCongThucs_CongThucs_CongThucId",
-                        column: x => x.CongThucId,
-                        principalTable: "CongThucs",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_NguyenLieuCongThucs_NguyenLieus_NguyenLieuId",
-                        column: x => x.NguyenLieuId,
-                        principalTable: "NguyenLieus",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -416,104 +457,123 @@ namespace FoodWebsite_API.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CongThucs_DacSanId",
-                table: "CongThucs",
-                column: "DacSanId");
+                name: "IX_Ingredients_Name",
+                table: "Ingredients",
+                column: "Name");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CongThucs_Slug",
-                table: "CongThucs",
-                column: "Slug");
+                name: "IX_Ingredients_NamePlain",
+                table: "Ingredients",
+                column: "NamePlain");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CongThucs_Ten",
-                table: "CongThucs",
-                column: "Ten");
+                name: "UQ__Ingredie__737584F67D5CF1AE",
+                table: "Ingredients",
+                column: "Name",
+                unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_CongThucs_TenKhongDau",
-                table: "CongThucs",
-                column: "TenKhongDau");
+                name: "IX_Provinces_Name",
+                table: "Provinces",
+                column: "Name");
 
             migrationBuilder.CreateIndex(
-                name: "IX_DacSanImages_DacSanId",
-                table: "DacSanImages",
-                column: "DacSanId");
+                name: "IX_Provinces_NamePlain",
+                table: "Provinces",
+                column: "NamePlain");
 
             migrationBuilder.CreateIndex(
-                name: "IX_DacSans_Slug",
-                table: "DacSans",
-                column: "Slug");
+                name: "UQ__Province__737584F6BEE19AA9",
+                table: "Provinces",
+                column: "Name",
+                unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_DacSans_Ten",
-                table: "DacSans",
-                column: "Ten");
+                name: "IX_Ratings_SpecialtyId_CreatedAt",
+                table: "Ratings",
+                columns: new[] { "SpecialtyId", "CreatedAt" },
+                descending: new[] { false, true });
 
             migrationBuilder.CreateIndex(
-                name: "IX_DacSans_TenKhongDau",
-                table: "DacSans",
-                column: "TenKhongDau");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_DacSans_TinhThanhId",
-                table: "DacSans",
-                column: "TinhThanhId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_NguoiDungNguyenLieus_NguyenLieuId",
-                table: "NguoiDungNguyenLieus",
-                column: "NguyenLieuId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_NguoiDungNguyenLieus_UserId",
-                table: "NguoiDungNguyenLieus",
+                name: "IX_Ratings_UserId",
+                table: "Ratings",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_NguyenLieuCongThucs_NguyenLieuId",
-                table: "NguyenLieuCongThucs",
-                column: "NguyenLieuId");
+                name: "IX_RecipeIngredient_IngredientId",
+                table: "RecipeIngredient",
+                column: "IngredientId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_NguyenLieus_Slug",
-                table: "NguyenLieus",
-                column: "Slug");
+                name: "IX_RecipeIngredient_RecipeId",
+                table: "RecipeIngredient",
+                column: "RecipeId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_NguyenLieus_Ten",
-                table: "NguyenLieus",
-                column: "Ten");
+                name: "IX_Recipes_CreatedAt",
+                table: "Recipes",
+                column: "CreatedAt",
+                descending: new bool[0]);
 
             migrationBuilder.CreateIndex(
-                name: "IX_NguyenLieus_TenKhongDau",
-                table: "NguyenLieus",
-                column: "TenKhongDau");
+                name: "IX_Recipes_Name",
+                table: "Recipes",
+                column: "Name");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Reviews_DacSanId",
-                table: "Reviews",
-                column: "DacSanId");
+                name: "IX_Recipes_NamePlain",
+                table: "Recipes",
+                column: "NamePlain");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Reviews_UserId",
-                table: "Reviews",
+                name: "IX_Recipes_SpecialtyId",
+                table: "Recipes",
+                column: "SpecialtyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RecipeStep_RecipeId",
+                table: "RecipeStep",
+                column: "RecipeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Specialties_Name",
+                table: "Specialties",
+                column: "Name");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Specialties_NamePlain",
+                table: "Specialties",
+                column: "NamePlain");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Specialties_ProvinceId",
+                table: "Specialties",
+                column: "ProvinceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SpecialtyImages_SpecialtyId",
+                table: "SpecialtyImages",
+                column: "SpecialtyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserFavoriteRecipes_RecipeId",
+                table: "UserFavoriteRecipes",
+                column: "RecipeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserFavoriteRecipes_UserId",
+                table: "UserFavoriteRecipes",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TinhThanhs_Slug",
-                table: "TinhThanhs",
-                column: "Slug");
+                name: "IX_UserIngredient_IngredientId",
+                table: "UserIngredient",
+                column: "IngredientId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TinhThanhs_Ten",
-                table: "TinhThanhs",
-                column: "Ten");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TinhThanhs_TenKhongDau",
-                table: "TinhThanhs",
-                column: "TenKhongDau");
+                name: "IX_UserIngredient_UserId",
+                table: "UserIngredient",
+                column: "UserId");
         }
 
         /// <inheritdoc />
@@ -535,34 +595,40 @@ namespace FoodWebsite_API.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "DacSanImages");
+                name: "Ratings");
 
             migrationBuilder.DropTable(
-                name: "NguoiDungNguyenLieus");
+                name: "RecipeIngredient");
 
             migrationBuilder.DropTable(
-                name: "NguyenLieuCongThucs");
+                name: "RecipeStep");
 
             migrationBuilder.DropTable(
-                name: "Reviews");
+                name: "SpecialtyImages");
+
+            migrationBuilder.DropTable(
+                name: "UserFavoriteRecipes");
+
+            migrationBuilder.DropTable(
+                name: "UserIngredient");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "CongThucs");
+                name: "Recipes");
 
             migrationBuilder.DropTable(
-                name: "NguyenLieus");
+                name: "Ingredients");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
 
             migrationBuilder.DropTable(
-                name: "DacSans");
+                name: "Specialties");
 
             migrationBuilder.DropTable(
-                name: "TinhThanhs");
+                name: "Provinces");
         }
     }
 }
