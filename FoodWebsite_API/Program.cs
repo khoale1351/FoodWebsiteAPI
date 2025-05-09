@@ -6,12 +6,13 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace FoodWebsite_API
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,7 @@ namespace FoodWebsite_API
 
             var jwtSettings = builder.Configuration.GetSection("Jwt");
             var secretKey = Environment.GetEnvironmentVariable("JWT__SecretKey") ?? jwtSettings["SecretKey"];
+            //Console.WriteLine($"SecretKey Length: {secretKey.Length}");
             if (string.IsNullOrWhiteSpace(secretKey) || secretKey.Length < 32)
             {
                 throw new InvalidOperationException("JWT SecretKey is missing or too short. Use at least 32 characters.");
@@ -92,6 +94,15 @@ namespace FoodWebsite_API
             });
 
             var app = builder.Build();
+
+            //Seed role
+            using (var scope = app.Services.CreateScope())
+            {
+                var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+                var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                await RoleSeeder.SeedRolesAsync(roleManager);            
+                await RoleSeeder.SeedAdminAsync(userManager, roleManager);
+            }
 
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())

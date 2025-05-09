@@ -18,19 +18,17 @@ namespace FoodWebsite_API.Models
 
     public class ApplicationUser : IdentityUser
     {
-        public string FullName { get; set; }
+        public string FullName { get; set; } = string.Empty;
 
-        public string AvatarUrl { get; set; }
+        public string AvatarUrl { get; set; } = string.Empty;
 
         public DateTime? DateOfBirth { get; set; }
 
-        public string City { get; set; }
+        public string City { get; set; } = string.Empty;
 
         public GenderType Gender { get; set; }
 
-        public string Address { get; set; }
-
-        public string PhoneNumber { get; set; }
+        public string Address { get; set; } = string.Empty;
 
         public bool IsActive { get; set; } = true;
 
@@ -39,9 +37,10 @@ namespace FoodWebsite_API.Models
         public DateTime CreatedAt { get; set; }
 
         //Navigation Properties
-        public ICollection<Review> Reviews { get; set; }
+        public ICollection<Rating> Ratings { get; set; } = new List<Rating>();
 
-        public ICollection<NguoiDungNguyenLieu> NguoiDung_NguyenLieus { get; set; }
+        public ICollection<UserIngredient> UserIngredients { get; set; } = new List<UserIngredient>();
+        public ICollection<UserFavoriteRecipe> UserFavoriteRecipes { get; set; } = new List<UserFavoriteRecipe>();
 
         public ApplicationUser() => CreatedAt = DateTime.UtcNow;
     }
