@@ -14,7 +14,12 @@ namespace FoodWebsite_API.Data
             {
                 if (!await roleManager.RoleExistsAsync(role))
                 {
-                    await roleManager.CreateAsync(new IdentityRole(role));
+                    var identityRole = new IdentityRole(role);
+                    var result = await roleManager.CreateAsync(identityRole);
+                    if (!result.Succeeded)
+                    {
+                        // Handle the error (e.g., log it)
+                    }
                 }
             }
         }
@@ -41,6 +46,10 @@ namespace FoodWebsite_API.Data
                 if (result.Succeeded)
                 {
                     await userManager.AddToRoleAsync(newAdmin, "Admin");
+                }
+                else
+                {
+                    // Handle the error (e.g., log it)
                 }
             }
         }

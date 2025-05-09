@@ -34,33 +34,47 @@ namespace FoodWebsite_API.Controllers
         [HttpPost]
         public async Task<ActionResult<Province>> Create(Province province)
         {
-            if (string.IsNullOrWhiteSpace(province.Name) || string.IsNullOrWhiteSpace(province.Region))
+            // Validate the model state
+            if (!ModelState.IsValid)
             {
-                return BadRequest("Name and Region are required.");
+                return BadRequest(ModelState);
             }
+
+            // Set default values
             province.Version = province.Version > 0 ? province.Version : 1;
             province.IsActive = true;
+
+            // Add the new province
             _context.Provinces.Add(province);
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetById), new { id = province.Id }, province);
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, Province province)
+        public async Task<IActionResult> Update(int id, [FromBody] Province province)
         {
-            if (id != province.Id) 
-                return BadRequest();
-            _context.Entry(province).State = EntityState.Modified;
-            try
+            if (id != province.Id)
             {
-                await _context.SaveChangesAsync();
+                return BadRequest("ID mismatch.");
             }
-            catch (DbUpdateConcurrencyException) 
-            { 
-                if (!_context.Provinces.Any(e  => e.Id == id))
-                    return BadRequest();
-                throw;
+
+            // Check if the province exists
+            var existingProvince = await _context.Provinces.FindAsync(id);
+            if (existingProvince == null)
+            {
+                return NotFound();
             }
+
+            // Update the properties
+            existingProvince.Name = province.Name;
+            existingProvince.Region = province.Region;
+            existingProvince.Description = province.Description;
+            existingProvince.Version = province.Version; // Ensure version is updated if necessary
+            existingProvince.IsActive = province.IsActive;
+
+            // Save changes
+            await _context.SaveChangesAsync();
+
             return NoContent();
         }
 
