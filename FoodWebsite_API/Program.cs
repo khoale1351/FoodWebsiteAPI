@@ -93,6 +93,16 @@ namespace FoodWebsite_API
                 });
             });
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
+
             var app = builder.Build();
 
             //Seed role
@@ -112,6 +122,8 @@ namespace FoodWebsite_API
             }
 
             app.UseHttpsRedirection();
+            app.UseCors("AllowAll");
+
 
             app.UseAuthentication();
             app.UseAuthorization();

@@ -19,7 +19,7 @@ namespace FoodWebsite_API.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Specialty>>> GetAll()
         {
-            return await _context.Specialties.Include(x => x.Province).ToListAsync();
+            return await _context.Specialties.ToListAsync();
         }
 
         [HttpGet("{id}")]
