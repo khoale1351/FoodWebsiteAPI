@@ -25,6 +25,7 @@ namespace FoodWebsite_API.Controllers
             return rec == null ? NotFound() : rec;
         }
 
+    //create
         [HttpPost]
         public async Task<ActionResult<Recipe>> Create(Recipe recipe)
         {
@@ -33,6 +34,7 @@ namespace FoodWebsite_API.Controllers
             return CreatedAtAction(nameof(GetById), new { id = recipe.Id }, recipe);
         }
 
+        //update
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, Recipe recipe)
         {

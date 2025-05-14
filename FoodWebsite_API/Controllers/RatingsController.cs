@@ -33,7 +33,7 @@ namespace FoodWebsite_API.Controllers
             var rating = await _context.Ratings.FindAsync(id);
             return rating == null ? NotFound() : rating;
         }
-
+//create
         [HttpPost]
         public async Task<ActionResult<Rating>> CreateRating(Rating rating)
         {
@@ -41,7 +41,7 @@ namespace FoodWebsite_API.Controllers
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetById), new { id = rating.Id }, rating);
         }
-
+//update
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateRating(int id, Rating rating)
         {

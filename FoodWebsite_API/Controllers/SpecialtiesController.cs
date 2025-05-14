@@ -36,7 +36,7 @@ namespace FoodWebsite_API.Controllers
         {
             return await _context.Specialties.Where(s => s.ProvinceId == provinceId).ToListAsync();
         }
-
+//craeate
         [HttpPost]
         public async Task<ActionResult<Specialty>> Create(Specialty specialty)
         {
@@ -44,7 +44,7 @@ namespace FoodWebsite_API.Controllers
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetById), new { id = specialty.Id }, specialty);
         }
-
+//update
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, Specialty specialty)
         {
