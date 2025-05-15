@@ -6,6 +6,8 @@ namespace FoodWebsite_API.Models
     {
         public int Id { get; set; }
 
+
+
         public string Name { get; set; } = null!;
 
         public string? NamePlain { get; set; }

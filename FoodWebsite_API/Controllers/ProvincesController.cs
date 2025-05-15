@@ -30,7 +30,7 @@ namespace FoodWebsite_API.Controllers
                 return NotFound();
             return province;
         }
-
+//create
         [HttpPost]
         public async Task<ActionResult<Province>> Create(Province province)
         {
@@ -49,7 +49,7 @@ namespace FoodWebsite_API.Controllers
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetById), new { id = province.Id }, province);
         }
-
+//update
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] Province province)
         {

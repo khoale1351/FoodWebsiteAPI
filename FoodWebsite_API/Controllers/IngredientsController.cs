@@ -25,32 +25,54 @@ namespace FoodWebsite_API.Controllers
             return nl == null ? NotFound() : nl;
         }
 
+
+        // Create
         [HttpPost]
-        public async Task<ActionResult<Ingredient>> Create(Ingredient ingredient)
+        public async Task<ActionResult<Ingredient>> Create([FromBody] Ingredient ingredient)
         {
+            if (ingredient == null)
+                return BadRequest("Ingredient cannot be null.");
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            ingredient.IsActive = true; // If applying soft-delete
+
             _context.Ingredients.Add(ingredient);
             await _context.SaveChangesAsync();
+
             return CreatedAtAction(nameof(GetById), new { id = ingredient.Id }, ingredient);
         }
 
+        // Update
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, Ingredient ingredient)
+        public async Task<IActionResult> Update(int id, [FromBody] Ingredient ingredient)
         {
-            if (id != ingredient.Id) 
-                return BadRequest();
+            if (ingredient == null)
+                return BadRequest("Ingredient cannot be null.");
+
+            if (id != ingredient.Id)
+                return BadRequest("Ingredient ID mismatch.");
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             _context.Entry(ingredient).State = EntityState.Modified;
-            try 
-            { 
-                await _context.SaveChangesAsync(); 
+
+            try
+            {
+                await _context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Ingredients.Any(e => e.Id == id)) 
+                if (!_context.Ingredients.Any(e => e.Id == id))
                     return NotFound();
-                throw;
+                throw; // Re-throw the exception for further handling
             }
+
             return NoContent();
         }
+
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteIngredient(int id)
