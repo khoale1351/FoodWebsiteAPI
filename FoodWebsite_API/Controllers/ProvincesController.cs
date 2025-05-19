@@ -117,28 +117,24 @@ namespace FoodWebsite_API.Controllers
         }
         //update
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] Province province)
+        public async Task<IActionResult> Update(int id, [FromBody] ProvinceUpdateDTO dto)
         {
-            if (id != province.Id)
-            {
-                return BadRequest("ID mismatch.");
-            }
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            // Check if the province exists
-            var existingProvince = await _context.Provinces.FindAsync(id);
-            if (existingProvince == null)
-            {
+            var province = await _context.Provinces.FindAsync(id);
+            if (province == null)
                 return NotFound();
-            }
 
-            // Update the properties
-            existingProvince.Name = province.Name;
-            existingProvince.Region = province.Region;
-            existingProvince.Description = province.Description;
-            existingProvince.Version = province.Version; // Ensure version is updated if necessary
-            existingProvince.IsActive = province.IsActive;
+            province.Region = dto.Region;
+            province.RegionPlain = SlugHelper.RemoveDiacritics(dto.Region);
+            province.Name = dto.Name;
+            province.NamePlain = SlugHelper.RemoveDiacritics(dto.Name);
+            province.Description = dto.Description;
+            province.Version = dto.Version;
+            province.IsActive = dto.IsActive;
+            province.ImageUrl = dto.ImageUrl;
 
-            // Save changes
             await _context.SaveChangesAsync();
 
             return NoContent();
