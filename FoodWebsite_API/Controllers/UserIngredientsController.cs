@@ -10,12 +10,12 @@ namespace FoodWebsite_API.Controllers
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
-    public class NguoiDungNguyenLieuController : ControllerBase
+    public class UserIngredientsController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public NguoiDungNguyenLieuController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
+        public UserIngredientsController(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
             _userManager = userManager;

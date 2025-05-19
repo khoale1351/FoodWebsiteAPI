@@ -220,7 +220,7 @@ namespace FoodWebsite_API.Migrations
 
                     b.HasIndex("NamePlain");
 
-                    b.HasIndex(new[] { "Name" }, "UQ__Province__737584F6BEE19AA9")
+                    b.HasIndex("Name", "Version")
                         .IsUnique();
 
                     b.ToTable("Provinces");

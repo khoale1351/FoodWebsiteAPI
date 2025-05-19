@@ -478,15 +478,15 @@ namespace FoodWebsite_API.Migrations
                 column: "Name");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Provinces_Name_Version",
+                table: "Provinces",
+                columns: new[] { "Name", "Version" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Provinces_NamePlain",
                 table: "Provinces",
                 column: "NamePlain");
-
-            migrationBuilder.CreateIndex(
-                name: "UQ__Province__737584F6BEE19AA9",
-                table: "Provinces",
-                column: "Name",
-                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Ratings_SpecialtyId_CreatedAt",
