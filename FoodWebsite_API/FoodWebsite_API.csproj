@@ -22,4 +22,11 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="DTOs\ApplicationUser\" />
+    <Folder Include="DTOs\UserIngredient\" />
+    <Folder Include="DTOs\UserFavoriteRecipe\" />
+    <Folder Include="DTOs\RecipeIngredient\" />
+  </ItemGroup>
+
 </Project>

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FoodWebsite_API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250507063814_InitialIdentityMigration")]
-    partial class InitialIdentityMigration
+    [Migration("20250519080706_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -223,7 +223,7 @@ namespace FoodWebsite_API.Migrations
 
                     b.HasIndex("NamePlain");
 
-                    b.HasIndex(new[] { "Name" }, "UQ__Province__737584F6BEE19AA9")
+                    b.HasIndex("Name", "Version")
                         .IsUnique();
 
                     b.ToTable("Provinces");

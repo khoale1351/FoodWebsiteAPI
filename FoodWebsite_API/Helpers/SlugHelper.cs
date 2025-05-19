@@ -5,12 +5,13 @@ using System.Text.RegularExpressions;
 
 namespace FoodWebsite_API.Function
 {
-    public static class StringExtensions
+    public static class SlugHelper
     {
         public static string RemoveDiacritics(this string text)
         {
             if (string.IsNullOrWhiteSpace(text))
-                return text;
+                return string.Empty;
+
             var normalizedString = text.Normalize(NormalizationForm.FormD);
             var stringBuilder = new StringBuilder();
             foreach (var c in normalizedString)
@@ -21,10 +22,11 @@ namespace FoodWebsite_API.Function
                     stringBuilder.Append(c);
                 }
             }
-            return stringBuilder.ToString()
-                .Replace('đ', 'd')
-                .Replace('Đ', 'D')
-                .Normalize(NormalizationForm.FormC);
+            string result = stringBuilder.ToString().Normalize(NormalizationForm.FormC).ToLowerInvariant();
+            result = Regex.Replace(result, @"[^\w\s]", ""); 
+            result = Regex.Replace(result, @"\s+", "");
+
+            return result;
         }
 
         public static string ToSlug(this string text)

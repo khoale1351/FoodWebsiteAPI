@@ -50,9 +50,7 @@ namespace FoodWebsite_API.Data
             modelBuilder.Entity<Province>(entity =>
             {
                 entity.HasKey(e => e.Id).HasName("PK__Province__3214EC079C64CD5E");
-
-                entity.HasIndex(e => e.Name, "UQ__Province__737584F6BEE19AA9").IsUnique();
-
+                entity.HasIndex(e => new { e.Name, e.Version }).IsUnique();
                 entity.Property(e => e.ImageUrl).HasMaxLength(255);
                 entity.Property(e => e.IsActive).HasDefaultValue(true);
                 entity.Property(e => e.Name).HasMaxLength(100);
