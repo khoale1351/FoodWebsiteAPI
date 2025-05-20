@@ -45,6 +45,20 @@ namespace FoodWebsite_API.Controllers
         {
             return await _context.Specialties.Where(s => s.ProvinceId == provinceId).ToListAsync();
         }
+        
+        //search 1 kết quả
+        [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<Specialty>>> SearchSpecialty([FromQuery] string query)
+        {
+            if (string.IsNullOrEmpty(query))
+                return BadRequest("Thiếu từ khóa");
+
+            var result = await _context.Specialties
+                .Where(s => s.Name.ToLower().Contains(query.ToLower()))
+                .ToListAsync();
+
+            return Ok(result);
+        }
 
 
         //craeate
