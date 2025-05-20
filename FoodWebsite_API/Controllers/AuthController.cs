@@ -16,11 +16,13 @@ namespace FoodWebsite_API.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configuration;
+        private readonly SymmetricSecurityKey _jwtKey;
 
-        public AuthController(UserManager<ApplicationUser> userManager, IConfiguration configuration)
+        public AuthController(UserManager<ApplicationUser> userManager, IConfiguration configuration, SymmetricSecurityKey jwtKey)
         {
             _userManager = userManager;
             _configuration = configuration;
+            _jwtKey = jwtKey;
         }
 
         // POST: /api/auth/register
@@ -60,12 +62,20 @@ namespace FoodWebsite_API.Controllers
         }
 
         // GET: /api/auth/profile (Chỉ dành cho user có token)
-        [HttpGet("profile")]
         [Authorize]
+        [HttpGet("profile")]
         public async Task<IActionResult> Profile()
         {
+            if (!User.Identity.IsAuthenticated)
+                return Unauthorized("Token is not valid or expired.");
+
             var email = User.FindFirstValue(ClaimTypes.Email);
+            if (email == null)
+                return Unauthorized("Cannot find email from token.");
+
             var user = await _userManager.FindByEmailAsync(email);
+            if (user == null)
+                return NotFound("User not found.");
 
             return Ok(new
             {
@@ -76,11 +86,11 @@ namespace FoodWebsite_API.Controllers
             });
         }
 
+
         // Tạo JWT
         private async Task<string> GenerateJwtToken(ApplicationUser user)
         {
             var jwtSettings = _configuration.GetSection("Jwt");
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]!));
 
             var claims = new List<Claim>
             {
@@ -97,7 +107,7 @@ namespace FoodWebsite_API.Controllers
                 audience: jwtSettings["Audience"],
                 claims: claims,
                 expires: DateTime.UtcNow.AddMinutes(Convert.ToDouble(jwtSettings["ExpireMinutes"])),
-                signingCredentials: new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
+                signingCredentials: new SigningCredentials(_jwtKey, SecurityAlgorithms.HmacSha256)
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
