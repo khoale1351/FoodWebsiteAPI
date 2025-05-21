@@ -28,5 +28,7 @@ namespace FoodWebsite_API.Models
         public virtual ICollection<Recipe> Recipes { get; set; } = new List<Recipe>();
 
         public virtual ICollection<SpecialtyImage> SpecialtyImages { get; set; } = new List<SpecialtyImage>();
+
+        public virtual ICollection<UserViewHistory> UserViewHistories { get; set; } = new List<UserViewHistory>();
     }
 }

@@ -40,7 +40,10 @@ namespace FoodWebsite_API.Models
         public ICollection<Rating> Ratings { get; set; } = new List<Rating>();
 
         public ICollection<UserIngredient> UserIngredients { get; set; } = new List<UserIngredient>();
+
         public ICollection<UserFavoriteRecipe> UserFavoriteRecipes { get; set; } = new List<UserFavoriteRecipe>();
+
+        public ICollection<UserViewHistory> UserViewHistories { get; set; } = new List<UserViewHistory>();
 
         public ApplicationUser() => CreatedAt = DateTime.UtcNow;
     }
