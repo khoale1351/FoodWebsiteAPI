@@ -34,5 +34,7 @@ namespace FoodWebsite_API.Models
         public virtual Specialty Specialty { get; set; } = null!;
 
         public virtual ICollection<UserFavoriteRecipe> UserFavoriteRecipes { get; set; } = new List<UserFavoriteRecipe>();
+
+        public virtual ICollection<UserViewHistory> UserViewHistories { get; set; } = new List<UserViewHistory>();
     }
 }

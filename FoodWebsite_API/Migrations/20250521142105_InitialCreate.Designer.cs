@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FoodWebsite_API.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250519080706_InitialCreate")]
+    [Migration("20250521142105_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -256,7 +256,6 @@ namespace FoodWebsite_API.Migrations
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id")
@@ -291,10 +290,14 @@ namespace FoodWebsite_API.Migrations
                         .HasColumnType("nvarchar(500)");
 
                     b.Property<bool>("IsApproved")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<bool>("IsOriginal")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -506,7 +509,6 @@ namespace FoodWebsite_API.Migrations
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id")
@@ -517,6 +519,44 @@ namespace FoodWebsite_API.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("UserIngredient", (string)null);
+                });
+
+            modelBuilder.Entity("FoodWebsite_API.Models.UserViewHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("RecipeId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SpecialtyId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("ViewedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("(sysdatetime())");
+
+                    b.HasKey("Id")
+                        .HasName("PK__UserView__3214EC073CD4D359");
+
+                    b.HasIndex(new[] { "RecipeId" }, "IX_UserViewHistory_RecipeId");
+
+                    b.HasIndex(new[] { "SpecialtyId" }, "IX_UserViewHistory_SpecialtyId");
+
+                    b.HasIndex(new[] { "UserId" }, "IX_UserViewHistory_UserId");
+
+                    b.ToTable("UserViewHistory", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_UserViewHistory_SpecialtyOrRecipe", "(SpecialtyId IS NOT NULL AND RecipeId IS NULL) OR (SpecialtyId IS NULL AND RecipeId IS NOT NULL)");
+                        });
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -766,6 +806,7 @@ namespace FoodWebsite_API.Migrations
                     b.HasOne("FoodWebsite_API.Models.Ingredient", "Ingredient")
                         .WithMany("UserIngredients")
                         .HasForeignKey("IngredientId")
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired()
                         .HasConstraintName("FK__UserIngre__Ingre__07C12930");
 
@@ -777,6 +818,34 @@ namespace FoodWebsite_API.Migrations
                         .HasConstraintName("FK__UserIngre__UserI__06CD04F7");
 
                     b.Navigation("Ingredient");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FoodWebsite_API.Models.UserViewHistory", b =>
+                {
+                    b.HasOne("FoodWebsite_API.Models.Recipe", "Recipe")
+                        .WithMany("UserViewHistories")
+                        .HasForeignKey("RecipeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("FK__UserViewH__Recip__123EB7A3");
+
+                    b.HasOne("FoodWebsite_API.Models.Specialty", "Specialty")
+                        .WithMany("UserViewHistories")
+                        .HasForeignKey("SpecialtyId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("FK__UserViewH__Speci__114A936A");
+
+                    b.HasOne("FoodWebsite_API.Models.ApplicationUser", "User")
+                        .WithMany("UserViewHistories")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK__UserViewH__UserI__10566F31");
+
+                    b.Navigation("Recipe");
+
+                    b.Navigation("Specialty");
 
                     b.Navigation("User");
                 });
@@ -839,6 +908,8 @@ namespace FoodWebsite_API.Migrations
                     b.Navigation("UserFavoriteRecipes");
 
                     b.Navigation("UserIngredients");
+
+                    b.Navigation("UserViewHistories");
                 });
 
             modelBuilder.Entity("FoodWebsite_API.Models.Ingredient", b =>
@@ -860,6 +931,8 @@ namespace FoodWebsite_API.Migrations
                     b.Navigation("RecipeSteps");
 
                     b.Navigation("UserFavoriteRecipes");
+
+                    b.Navigation("UserViewHistories");
                 });
 
             modelBuilder.Entity("FoodWebsite_API.Models.Specialty", b =>
@@ -869,6 +942,8 @@ namespace FoodWebsite_API.Migrations
                     b.Navigation("Recipes");
 
                     b.Navigation("SpecialtyImages");
+
+                    b.Navigation("UserViewHistories");
                 });
 #pragma warning restore 612, 618
         }

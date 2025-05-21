@@ -210,7 +210,7 @@ namespace FoodWebsite_API.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     IngredientId = table.Column<int>(type: "int", nullable: false),
                     Quantity = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
                     Unit = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false)
@@ -261,7 +261,7 @@ namespace FoodWebsite_API.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     SpecialtyId = table.Column<int>(type: "int", nullable: false),
                     Stars = table.Column<int>(type: "int", nullable: false),
                     Comment = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -294,11 +294,11 @@ namespace FoodWebsite_API.Migrations
                     SpecialtyId = table.Column<int>(type: "int", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     NamePlain = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
-                    IsOriginal = table.Column<bool>(type: "bit", nullable: false),
+                    IsOriginal = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     PrepareTime = table.Column<int>(type: "int", nullable: true),
                     CookingTime = table.Column<int>(type: "int", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
-                    IsApproved = table.Column<bool>(type: "bit", nullable: false),
+                    IsApproved = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: true, defaultValueSql: "(sysdatetime())"),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -401,6 +401,41 @@ namespace FoodWebsite_API.Migrations
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK__UserFavor__UserI__10566F31",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "UserViewHistory",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    SpecialtyId = table.Column<int>(type: "int", nullable: true),
+                    RecipeId = table.Column<int>(type: "int", nullable: true),
+                    ViewedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "(sysdatetime())")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK__UserView__3214EC073CD4D359", x => x.Id);
+                    table.CheckConstraint("CK_UserViewHistory_SpecialtyOrRecipe", "(SpecialtyId IS NOT NULL AND RecipeId IS NULL) OR (SpecialtyId IS NULL AND RecipeId IS NOT NULL)");
+                    table.ForeignKey(
+                        name: "FK__UserViewH__Recip__123EB7A3",
+                        column: x => x.RecipeId,
+                        principalTable: "Recipes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK__UserViewH__Speci__114A936A",
+                        column: x => x.SpecialtyId,
+                        principalTable: "Specialties",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK__UserViewH__UserI__10566F31",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
@@ -574,11 +609,62 @@ namespace FoodWebsite_API.Migrations
                 name: "IX_UserIngredient_UserId",
                 table: "UserIngredient",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserViewHistory_RecipeId",
+                table: "UserViewHistory",
+                column: "RecipeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserViewHistory_SpecialtyId",
+                table: "UserViewHistory",
+                column: "SpecialtyId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserViewHistory_UserId",
+                table: "UserViewHistory",
+                column: "UserId");
+
+            migrationBuilder.Sql("ALTER TABLE Provinces ADD CONSTRAINT CK_Provinces_IsActive CHECK (IsActive IN (0,1));");
+
+            migrationBuilder.Sql("ALTER TABLE Specialties ADD CONSTRAINT CK_Specialties_IsActive CHECK (IsActive IN (0,1));");
+
+            migrationBuilder.Sql("ALTER TABLE Ratings ADD CONSTRAINT CK_Ratings_Stars CHECK (Stars BETWEEN 1 AND 5);");
+
+            migrationBuilder.Sql("ALTER TABLE Ingredients ADD CONSTRAINT CK_Ingredients_IsActive CHECK (IsActive IN (0,1));");
+
+            migrationBuilder.Sql("ALTER TABLE Recipes ADD CONSTRAINT CK_Recipes_PrepareTime CHECK (PrepareTime BETWEEN 0 AND 6000);");
+
+            migrationBuilder.Sql("ALTER TABLE Recipes ADD CONSTRAINT CK_Recipes_CookingTime CHECK (CookingTime BETWEEN 0 AND 6000);");
+
+            migrationBuilder.Sql("ALTER TABLE Recipes ADD CONSTRAINT CK_Recipes_IsApproved CHECK (IsApproved IN (0,1));");
+
+            migrationBuilder.Sql("ALTER TABLE RecipeIngredient ADD CONSTRAINT CK_RecipeIngredient_Quantity CHECK (Quantity >= 0.01 AND Quantity <= 10000);");
+
+            migrationBuilder.Sql("ALTER TABLE UserIngredient ADD CONSTRAINT CK_UserIngredient_Quantity CHECK (Quantity >= 0.01 AND Quantity <= 10000);");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.Sql("ALTER TABLE Provinces DROP CONSTRAINT CK_Provinces_IsActive;");
+
+            migrationBuilder.Sql("ALTER TABLE Specialties DROP CONSTRAINT CK_Specialties_IsActive;");
+
+            migrationBuilder.Sql("ALTER TABLE Ingredients DROP CONSTRAINT CK_Ingredients_IsActive;");
+
+            migrationBuilder.Sql("ALTER TABLE Recipes DROP CONSTRAINT CK_Recipes_PrepareTime;");
+
+            migrationBuilder.Sql("ALTER TABLE Recipes DROP CONSTRAINT CK_Recipes_CookingTime;");
+
+            migrationBuilder.Sql("ALTER TABLE Recipes DROP CONSTRAINT CK_Recipes_IsApproved;");
+
+            migrationBuilder.Sql("ALTER TABLE Ratings DROP CONSTRAINT CK_Ratings_Stars;");
+
+            migrationBuilder.Sql("ALTER TABLE RecipeIngredient DROP CONSTRAINT CK_RecipeIngredient_Quantity;");
+
+            migrationBuilder.Sql("ALTER TABLE UserIngredient DROP CONSTRAINT CK_UserIngredient_Quantity;");
+
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 
@@ -613,13 +699,16 @@ namespace FoodWebsite_API.Migrations
                 name: "UserIngredient");
 
             migrationBuilder.DropTable(
+                name: "UserViewHistory");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "Recipes");
+                name: "Ingredients");
 
             migrationBuilder.DropTable(
-                name: "Ingredients");
+                name: "Recipes");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
