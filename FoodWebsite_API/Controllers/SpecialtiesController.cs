@@ -1,4 +1,6 @@
 ﻿using FoodWebsite_API.Data;
+using FoodWebsite_API.DTOs.Specialty;
+using FoodWebsite_API.Function;
 using FoodWebsite_API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -36,7 +38,7 @@ namespace FoodWebsite_API.Controllers
         {
             return await _context.Specialties.Where(s => s.ProvinceId == provinceId).ToListAsync();
         }
-//craeate
+
         [HttpPost]
         public async Task<ActionResult<Specialty>> Create(Specialty specialty)
         {
@@ -44,7 +46,7 @@ namespace FoodWebsite_API.Controllers
             await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetById), new { id = specialty.Id }, specialty);
         }
-//update
+
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, Specialty specialty)
         {
@@ -81,11 +83,35 @@ namespace FoodWebsite_API.Controllers
             if (string.IsNullOrEmpty(query))
                 return BadRequest("Thiếu từ khóa");
 
+            query = SlugHelper.RemoveDiacritics(query).ToLower();
             var result = await _context.Specialties
-                .Where(s => s.Name.ToLower().Contains(query.ToLower()))
+                .Where(s => s.NamePlain.Contains(query))
                 .ToListAsync();
 
             return Ok(result);
+        }
+
+        [HttpGet("{id}/detail")]
+        public async Task<ActionResult<SpecialtyDetailDTO>> GetSpecialtyWithImages(int id)
+        {
+            var specialty = await _context.Specialties
+                .Include(s => s.Province)
+                .Include(s => s.SpecialtyImages)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (specialty == null)
+                return NotFound();
+
+            var dto = new SpecialtyDetailDTO
+            {
+                Id = specialty.Id,
+                Name = specialty.Name,
+                Description = specialty.Description,
+                ProvinceName = specialty.Province?.Name,
+                ImageUrls = specialty.SpecialtyImages.Select(img => img.ImageUrl).ToList()
+            };
+
+            return Ok(dto);
         }
     }
 }
