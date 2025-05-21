@@ -74,5 +74,18 @@ namespace FoodWebsite_API.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
+        [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<Specialty>>> SearchSpecialty([FromQuery] string query)
+        {
+            if (string.IsNullOrEmpty(query))
+                return BadRequest("Thiếu từ khóa");
+
+            var result = await _context.Specialties
+                .Where(s => s.Name.ToLower().Contains(query.ToLower()))
+                .ToListAsync();
+
+            return Ok(result);
+        }
     }
 }
