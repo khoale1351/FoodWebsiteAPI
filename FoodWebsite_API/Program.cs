@@ -119,6 +119,7 @@ namespace FoodWebsite_API
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
+                app.UseDeveloperExceptionPage();
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
@@ -126,6 +127,7 @@ namespace FoodWebsite_API
             app.UseHttpsRedirection();
             app.UseCors("AllowAll");
 
+            app.UseStaticFiles();
 
             app.UseAuthentication();
             app.UseAuthorization();
