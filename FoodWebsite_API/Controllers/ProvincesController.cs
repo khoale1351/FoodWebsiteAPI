@@ -1,5 +1,8 @@
 ﻿using FoodWebsite_API.Data;
 using FoodWebsite_API.DTOs.Province;
+using FoodWebsite_API.DTOs.Recipe;
+using FoodWebsite_API.DTOs.Specialty;
+using FoodWebsite_API.DTOs.SpecialtyImages;
 using FoodWebsite_API.Function;
 using FoodWebsite_API.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -199,5 +202,53 @@ namespace FoodWebsite_API.Controllers
 
             return Ok(new { ImageUrl = province.ImageUrl });
         }
+
+        [HttpGet("{id}/specialties")]
+        public async Task<ActionResult<IEnumerable<SpecialtyDetailDTO>>> GetSpecialtiesByProvince(int id)
+        {
+            var provinceExists = await _context.Provinces.AnyAsync(p => p.Id == id);
+            if (!provinceExists) return NotFound("Province not found");
+
+            var specialties = await _context.Specialties
+                .Where(s => s.ProvinceId == id)
+                .Include(s => s.SpecialtyImages)
+                .Include(s => s.Recipes)
+                .Include(s => s.Ratings)
+                .ToListAsync();
+
+            var result = specialties.Select(s => new SpecialtyDetailDTO
+            {
+                Id = s.Id,
+                Name = s.Name,
+                NamePlain = s.NamePlain,
+                Description = s.Description,
+                ProvinceId = s.ProvinceId,
+                ProvinceName = s.Province?.Name,
+                CreatedAt = s.CreatedAt,
+                UpdatedAt = s.UpdatedAt,
+                IsActive = s.IsActive,
+                Province = new ProvinceReadDTO
+                {
+                    Id = id,
+                    Name = s.Province?.Name ?? ""
+                },
+                ImageUrls = s.SpecialtyImages.Select(i => i.ImageUrl).ToList(),
+                SpecialtyImages = s.SpecialtyImages.Select(i => new SpecialtyImagesReadDTO
+                {
+                    Id = i.Id,
+                    SpecialtyId = i.Id,
+                    ImageUrl = i.ImageUrl
+                }).ToList(),
+                Recipes = s.Recipes.Select(r => new RecipeReadDTO
+                {
+                    Id = r.Id,
+                    Name = r.Name,
+                    Description = r.Description
+                }).ToList()
+            }).ToList();
+
+            return Ok(result);
+        }
+
     }
 }
