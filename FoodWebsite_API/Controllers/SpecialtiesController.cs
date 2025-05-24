@@ -82,13 +82,24 @@ namespace FoodWebsite_API.Controllers
         }
 
         [HttpGet("search")]
-        public async Task<ActionResult<IEnumerable<Specialty>>> SearchSpecialty([FromQuery] string query)
+        public async Task<IActionResult> SearchSpecialty([FromQuery] string query)
         {
-            if (string.IsNullOrEmpty(query))
-                return BadRequest("Thiếu từ khóa");
+            if (string.IsNullOrWhiteSpace(query))
+                return BadRequest("Từ khoá tìm kiếm không hợp lệ.");
+
+            string normalizedQuery = query.RemoveDiacritics();
+            string rawQueryLower = query.ToLowerInvariant();
 
             var result = await _context.Specialties
-                .Where(s => s.Name.Contains(query.ToLower()) || s.NamePlain.Contains(SlugHelper.RemoveDiacritics(query)))
+                .Include(s => s.SpecialtyImages)
+                .Where(s => s.Name.ToLower().Contains(rawQueryLower) || (s.NamePlain != null && s.NamePlain.Contains(normalizedQuery)))
+                .Select(s => new SpecialtySearchResultDTO
+                {
+                    Id = s.Id,
+                    Name = s.Name,
+                    Description = s.Description,
+                    Images = s.SpecialtyImages.FirstOrDefault().ImageUrl
+                })
                 .ToListAsync();
 
             return Ok(result);
