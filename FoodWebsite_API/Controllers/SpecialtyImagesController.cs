@@ -1,5 +1,4 @@
 ﻿using FoodWebsite_API.Data;
-using FoodWebsite_API.DTOs.Specialty;
 using FoodWebsite_API.DTOs.SpecialtyImages;
 using FoodWebsite_API.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -24,14 +23,6 @@ namespace FoodWebsite_API.Controllers
             return await _context.SpecialtyImages.Where(img => img.SpecialtyId == specialtyId).ToListAsync();
         }
 
-        //[HttpPost]
-        //public async Task<ActionResult<SpecialtyImage>> UploadImage(SpecialtyImage image)
-        //{
-        //    _context.SpecialtyImages.Add(image);
-        //    await _context.SaveChangesAsync();
-        //    return CreatedAtAction(nameof(GetImages), new { specialtyId = image.SpecialtyId }, image);
-        //}
-
         [HttpPost("upload")]
         public async Task<IActionResult> UploadImage([FromForm] SpecialtyImageUpoadDTO dto)
         {
@@ -43,10 +34,12 @@ namespace FoodWebsite_API.Controllers
                 Directory.CreateDirectory(uploadsFolder);
 
             var extension = Path.GetExtension(dto.ImageFile.FileName).ToLower();
-            var originalName = Path.GetFileNameWithoutExtension(dto.ImageFile.FileName);
-            var safeName = Regex.Replace(originalName.ToLower(), @"[^a-z0-9]+", "-").Trim('-');
+            if (extension != ".jpg" && extension != ".jpeg" && extension != ".png" && extension != ".webp")
+                return BadRequest("Chỉ cho phép định dạng .jpg, .jpeg, .png, .webp");
 
-            // Thêm hậu tố thời gian để tránh trùng tên
+            var originalName = Path.GetFileNameWithoutExtension(dto.ImageFile.FileName);
+            var safeName = Regex.Replace(originalName.ToLower(), "[^a-z0-9]+", "-").Trim('-');
+
             var fileName = $"{safeName}-{DateTime.UtcNow.Ticks}{extension}";
             var filePath = Path.Combine(uploadsFolder, fileName);
 
@@ -88,7 +81,7 @@ namespace FoodWebsite_API.Controllers
                         continue;
 
                     var originalName = Path.GetFileNameWithoutExtension(file.FileName);
-                    var safeName = Regex.Replace(originalName.ToLower(), @"[^a-z0-9]+", "-").Trim('-');
+                    var safeName = Regex.Replace(originalName.ToLower(), "[^a-z0-9]+", "-").Trim('-');
 
                     var fileName = $"{safeName}-{DateTime.UtcNow.Ticks}{extension}";
                     var filePath = Path.Combine(uploadsFolder, fileName);
@@ -113,6 +106,58 @@ namespace FoodWebsite_API.Controllers
 
             return Ok(uploadedImages);
         }
+
+        [HttpPost("upload-multi-specialties")]
+        public async Task<IActionResult> UploadMultipleSpecialtyImages([FromForm] SpecialtyImageMultiUploadWrapperDTO dto)
+        {
+            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "specialties");
+            if (!Directory.Exists(uploadsFolder))
+                Directory.CreateDirectory(uploadsFolder);
+
+            var allImages = new List<SpecialtyImage>();
+
+            foreach (var item in dto.Items)
+            {
+                // ✅ Bỏ qua nếu không có ảnh
+                if (item.Files == null || item.Files.Count == 0)
+                    continue;
+
+                foreach (var file in item.Files)
+                {
+                    if (file.Length == 0) continue;
+
+                    var extension = Path.GetExtension(file.FileName).ToLower();
+                    if (extension != ".jpg" && extension != ".jpeg" && extension != ".png" && extension != ".webp")
+                        continue;
+
+                    var originalName = Path.GetFileNameWithoutExtension(file.FileName);
+                    var safeName = Regex.Replace(originalName.ToLower(), "[^a-z0-9]+", "-").Trim('-');
+                    var fileName = $"{safeName}-{DateTime.UtcNow.Ticks}{extension}";
+                    var filePath = Path.Combine(uploadsFolder, fileName);
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+
+                    allImages.Add(new SpecialtyImage
+                    {
+                        SpecialtyId = item.SpecialtyId,
+                        ImageUrl = $"/images/specialties/{fileName}"
+                    });
+                }
+            }
+
+            if (allImages.Count == 0)
+                return BadRequest("Không có ảnh hợp lệ nào được tải lên.");
+
+            _context.SpecialtyImages.AddRange(allImages);
+            await _context.SaveChangesAsync();
+
+            return Ok(allImages);
+        }
+
+
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteImage(int id)
