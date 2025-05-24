@@ -50,12 +50,13 @@ namespace FoodWebsite_API.Controllers
         [HttpPost]
         public async Task<ActionResult> CreateHistory([FromBody] UserViewHistoryCreateDTO dto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
 
             var history = new UserViewHistory
             {
-                UserId = dto.UserId,
+                UserId = userId,
                 SpecialtyId = dto.SpecialtyId,
                 RecipeId = dto.RecipeId,
                 ViewedAt = DateTime.Now
@@ -64,7 +65,7 @@ namespace FoodWebsite_API.Controllers
             _context.UserViewHistories.Add(history);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetUserHistory), new { userId = dto.UserId }, null);
+            return CreatedAtAction(nameof(GetUserHistory), new { userId }, null);
         }
 
         [HttpGet("top-specialties")]
