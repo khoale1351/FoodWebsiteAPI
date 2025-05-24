@@ -32,13 +32,13 @@ namespace FoodWebsite_API.Controllers
         public async Task<ActionResult<Specialty>> GetById(int id)
         {
             var specialty = await _context.Specialties.Include(x => x.Province).FirstOrDefaultAsync(x => x.Id == id);
-            if (specialty == null) 
+            if (specialty == null)
                 return NotFound();
             return specialty;
         }
 
         [HttpGet("../Provinces/{provinceId}/Specialties")]
-        public async Task<ActionResult<IEnumerable<Specialty>>> GetSpecialtiesByProvinceId (int provinceId)
+        public async Task<ActionResult<IEnumerable<Specialty>>> GetSpecialtiesByProvinceId(int provinceId)
         {
             return await _context.Specialties.Where(s => s.ProvinceId == provinceId).ToListAsync();
         }
@@ -54,7 +54,7 @@ namespace FoodWebsite_API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, Specialty specialty)
         {
-            if (id != specialty.Id) 
+            if (id != specialty.Id)
                 return BadRequest();
             _context.Entry(specialty).State = EntityState.Modified;
             try
@@ -63,7 +63,7 @@ namespace FoodWebsite_API.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Specialties.Any(e  => e.Id == specialty.Id))
+                if (!_context.Specialties.Any(e => e.Id == specialty.Id))
                     return NotFound();
                 throw;
             }
@@ -74,7 +74,7 @@ namespace FoodWebsite_API.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var specialty = await _context.Specialties.FindAsync(id);
-            if (specialty == null) 
+            if (specialty == null)
                 return NotFound();
             _context.Specialties.Remove(specialty);
             await _context.SaveChangesAsync();

@@ -1,4 +1,4 @@
-﻿using FoodWebsite_API.DTOs.Province;
+using FoodWebsite_API.DTOs.Province;
 using FoodWebsite_API.DTOs.Rating;
 using FoodWebsite_API.DTOs.Recipe;
 using FoodWebsite_API.DTOs.SpecialtyImages;

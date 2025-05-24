@@ -30,7 +30,7 @@ namespace FoodWebsite_API.Controllers
                 search = SlugHelper.RemoveDiacritics(search);
                 query = query.Where(p => p.NamePlain.Contains(search)
                                        || p.RegionPlain.Contains(search));
-                                       //|| (p.Description != null && p.Description.ToLower().Contains(search)));
+                //|| (p.Description != null && p.Description.ToLower().Contains(search)));
             }
 
             if (isActive.HasValue)
@@ -146,7 +146,7 @@ namespace FoodWebsite_API.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var province = await _context.Provinces.FindAsync(id);
-            if (province == null) 
+            if (province == null)
                 return NotFound();
             _context.Provinces.Remove(province);
             await _context.SaveChangesAsync();
