@@ -12,20 +12,12 @@ namespace FoodWebsite_API.Controllers
     public class ProvincesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-
-
-        public ProvincesController(ApplicationDbContext context)
-        {
-            _context = context;
-        }
-
         private readonly IWebHostEnvironment _env;
 
         public ProvincesController(ApplicationDbContext context, IWebHostEnvironment env)
         {
             _context = context;
             _env = env;
-
         }
 
         [HttpGet]
@@ -35,14 +27,10 @@ namespace FoodWebsite_API.Controllers
 
             if (!string.IsNullOrWhiteSpace(search))
             {
-
-                search = search.Trim().ToLower();
-
                 search = SlugHelper.RemoveDiacritics(search);
-
                 query = query.Where(p => p.NamePlain.Contains(search)
                                        || p.RegionPlain.Contains(search));
-                                       //|| (p.Description != null && p.Description.ToLower().Contains(search)));
+                //|| (p.Description != null && p.Description.ToLower().Contains(search)));
             }
 
             if (isActive.HasValue)
@@ -93,7 +81,6 @@ namespace FoodWebsite_API.Controllers
             return Ok(province);
         }
 
-
         [HttpPost]
         public async Task<ActionResult<ProvinceReadDTO>> Create([FromBody] ProvinceCreateDTO dto)
         {
@@ -131,7 +118,6 @@ namespace FoodWebsite_API.Controllers
             return CreatedAtAction(nameof(GetById), new { id = province.Id }, resultDto);
         }
 
-
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] ProvinceUpdateDTO dto)
         {
@@ -160,13 +146,12 @@ namespace FoodWebsite_API.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var province = await _context.Provinces.FindAsync(id);
-            if (province == null) 
+            if (province == null)
                 return NotFound();
             _context.Provinces.Remove(province);
             await _context.SaveChangesAsync();
             return NoContent();
         }
-
 
         [HttpPost("{id}/upload-image")]
         public async Task<IActionResult> UploadProvinceImage(int id, IFormFile file)
@@ -214,6 +199,5 @@ namespace FoodWebsite_API.Controllers
 
             return Ok(new { ImageUrl = province.ImageUrl });
         }
-
     }
 }
