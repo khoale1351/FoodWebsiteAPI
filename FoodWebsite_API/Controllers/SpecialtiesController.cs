@@ -1,4 +1,5 @@
 ﻿using FoodWebsite_API.Data;
+using FoodWebsite_API.DTOs.Province;
 using FoodWebsite_API.DTOs.Rating;
 using FoodWebsite_API.DTOs.Recipe;
 using FoodWebsite_API.DTOs.Specialty;
@@ -23,25 +24,105 @@ namespace FoodWebsite_API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Specialty>>> GetAll()
+        public async Task<ActionResult<IEnumerable<SpecialtyDetailDTO>>> GetAllOrByProvince([FromQuery] int? provinceId)
         {
-            return await _context.Specialties.ToListAsync();
+            IQueryable<Specialty> query = _context.Specialties
+                .Include(s => s.Province)
+                .Include(s => s.SpecialtyImages)
+                .Include(s => s.Recipes)
+                .Include(s => s.Ratings);
+
+            if (provinceId.HasValue)
+            {
+                query = query.Where(s => s.ProvinceId == provinceId.Value);
+            }
+
+            var specialties = await query.ToListAsync();
+
+            var result = specialties.Select(s => new SpecialtyDetailDTO
+            {
+                Id = s.Id,
+                Name = s.Name,
+                NamePlain = s.NamePlain,
+                Description = s.Description,
+                ProvinceId = s.ProvinceId,
+                ProvinceName = s.Province?.Name,
+                CreatedAt = s.CreatedAt,
+                UpdatedAt = s.UpdatedAt,
+                IsActive = s.IsActive,
+                Province = s.Province != null ? new ProvinceReadDTO
+                {
+                    Id = s.Province.Id,
+                    Name = s.Province.Name
+                    // Thêm các field khác nếu có trong ProvinceReadDTO
+                } : null,
+                ImageUrls = s.SpecialtyImages.Select(i => i.ImageUrl).ToList(),
+                SpecialtyImages = s.SpecialtyImages.Select(i => new SpecialtyImagesReadDTO
+                {
+                    Id = i.Id,
+                    SpecialtyId = i.SpecialtyId,
+                    ImageUrl = i.ImageUrl
+                    // Thêm các field khác nếu có trong DTO
+                }).ToList(),
+                Recipes = s.Recipes.Select(r => new RecipeReadDTO
+                {
+                    Id = r.Id,
+                    Name = r.Name,
+                    Description = r.Description,
+                    // Thêm các field khác nếu có trong DTO
+                }).ToList()             
+            }).ToList();
+
+            return Ok(result);
         }
+
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Specialty>> GetById(int id)
+        public async Task<ActionResult<SpecialtyDetailDTO>> GetById(int id)
         {
-            var specialty = await _context.Specialties.Include(x => x.Province).FirstOrDefaultAsync(x => x.Id == id);
-            if (specialty == null)
-                return NotFound();
-            return specialty;
+            var s = await _context.Specialties
+                .Include(s => s.Province)
+                .Include(s => s.SpecialtyImages)
+                .Include(s => s.Recipes)
+                .Include(s => s.Ratings)
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (s == null) return NotFound();
+
+            var dto = new SpecialtyDetailDTO
+            {
+                Id = s.Id,
+                Name = s.Name,
+                NamePlain = s.NamePlain,
+                Description = s.Description,
+                ProvinceId = s.ProvinceId,
+                ProvinceName = s.Province?.Name,
+                CreatedAt = s.CreatedAt,
+                UpdatedAt = s.UpdatedAt,
+                IsActive = s.IsActive,
+                Province = s.Province != null ? new ProvinceReadDTO
+                {
+                    Id = s.Province.Id,
+                    Name = s.Province.Name
+                } : null,
+                ImageUrls = s.SpecialtyImages.Select(i => i.ImageUrl).ToList(),
+                SpecialtyImages = s.SpecialtyImages.Select(i => new SpecialtyImagesReadDTO
+                {
+                    Id = i.Id,
+                    SpecialtyId = i.SpecialtyId,
+                    ImageUrl = i.ImageUrl
+                }).ToList(),
+                Recipes = s.Recipes.Select(r => new RecipeReadDTO
+                {
+                    Id = r.Id,
+                    Name = r.Name,
+                    Description = r.Description
+                }).ToList()
+            };
+
+            return Ok(dto);
         }
 
-        [HttpGet("../Provinces/{provinceId}/Specialties")]
-        public async Task<ActionResult<IEnumerable<Specialty>>> GetSpecialtiesByProvinceId(int provinceId)
-        {
-            return await _context.Specialties.Where(s => s.ProvinceId == provinceId).ToListAsync();
-        }
 
         [HttpPost]
         public async Task<ActionResult<Specialty>> Create(Specialty specialty)
