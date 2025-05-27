@@ -168,8 +168,8 @@ namespace FoodWebsite_API.Controllers
             if (string.IsNullOrWhiteSpace(query))
                 return BadRequest("Từ khoá tìm kiếm không hợp lệ.");
 
-            string normalizedQuery = query.RemoveDiacritics();
-            string rawQueryLower = query.ToLowerInvariant();
+            string normalizedQuery = query.Trim().RemoveDiacritics();
+            string rawQueryLower = query.Trim().ToLowerInvariant();
 
             var result = await _context.Specialties
                 .Include(s => s.SpecialtyImages)
