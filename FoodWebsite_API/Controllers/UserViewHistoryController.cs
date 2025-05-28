@@ -20,7 +20,7 @@ namespace FoodWebsite_API.Controllers
             _context = context;
         }
 
-        [HttpGet("{userId}")]
+        [HttpGet("user/{userId}")]
         public async Task<ActionResult<IEnumerable<UserViewHistoryReadDTO>>> GetUserHistory(string userId)
         {
             var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -47,6 +47,34 @@ namespace FoodWebsite_API.Controllers
             return Ok(histories);
         }
 
+        [HttpGet("{id:int}")]
+        public async Task<ActionResult<UserViewHistoryReadDTO>> GetById(int id)
+        {
+            var history = await _context.UserViewHistories
+                .Include(h => h.User)
+                .Include(h => h.Specialty)
+                .Include(h => h.Recipe)
+                .FirstOrDefaultAsync(h => h.Id == id);
+
+            if (history == null) return NotFound();
+
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (history.UserId != currentUserId)
+                return Forbid();
+
+            return new UserViewHistoryReadDTO
+            {
+                Id = history.Id,
+                UserId = history.UserId,
+                UserName = history.User?.UserName,
+                SpecialtyId = history.SpecialtyId,
+                SpecialtyName = history.Specialty?.Name,
+                RecipeId = history.RecipeId,
+                RecipeName = history.Recipe?.Name,
+                ViewedAt = history.ViewedAt
+            };
+        }
+
         [HttpPost]
         public async Task<ActionResult> CreateHistory([FromBody] UserViewHistoryCreateDTO dto)
         {
@@ -61,11 +89,41 @@ namespace FoodWebsite_API.Controllers
                 RecipeId = dto.RecipeId,
                 ViewedAt = DateTime.Now
             };
-
             _context.UserViewHistories.Add(history);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetUserHistory), new { userId }, null);
+            var user = await _context.Users.FindAsync(userId);
+            var specialty = await _context.Specialties.FindAsync(dto.SpecialtyId);
+            var recipe = await _context.Recipes.FindAsync(dto.RecipeId);
+            var readDto = new UserViewHistoryReadDTO
+            {
+                Id = history.Id,
+                UserId = history.UserId,
+                UserName = user?.UserName,
+                SpecialtyId = history.SpecialtyId,
+                SpecialtyName = specialty?.Name,
+                RecipeId = history.RecipeId,
+                RecipeName = recipe?.Name,
+                ViewedAt = history.ViewedAt
+            };
+
+            return CreatedAtAction(nameof(GetById), new { id = history.Id }, readDto);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var history = await _context.UserViewHistories.FindAsync(id);
+            if (history == null) return NotFound();
+
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (history.UserId != currentUserId)
+                return Forbid();
+
+            _context.UserViewHistories.Remove(history);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
 
         [HttpGet("top-specialties")]
