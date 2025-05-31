@@ -23,7 +23,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="DTOs\ApplicationUser\" />
     <Folder Include="DTOs\UserIngredient\" />
     <Folder Include="DTOs\UserFavoriteRecipe\" />
     <Folder Include="DTOs\RecipeIngredient\" />

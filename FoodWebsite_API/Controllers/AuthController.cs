@@ -1,4 +1,5 @@
-﻿using FoodWebsite_API.Models;
+﻿using FoodWebsite_API.DTOs.Auth;
+using FoodWebsite_API.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -27,24 +28,28 @@ namespace FoodWebsite_API.Controllers
 
         // POST: /api/auth/register
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterModel model)
+        public async Task<IActionResult> Register([FromBody] RegisterDTO dto)
         {
             if (!ModelState.IsValid) return BadRequest(ModelState);
 
+            var existingUser = await _userManager.FindByEmailAsync(dto.Email);
+            if (existingUser != null)
+                return BadRequest(new { message = "Email đã được sử dụng." });
+
             var user = new ApplicationUser
             {
-                UserName = model.Email,
-                Email = model.Email,
-                FullName = model.FullName,
-                PhoneNumber = model.PhoneNumber
+                UserName = dto.Email,
+                Email = dto.Email,
+                FullName = dto.FullName,
+                PhoneNumber = dto.PhoneNumber
             };
 
-            var result = await _userManager.CreateAsync(user, model.Password);
+            var result = await _userManager.CreateAsync(user, dto.Password);
 
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
 
-            return Ok(new { message = "User registered successfully!" });
+            return Ok(new { message = "Đăng ký thành công!" });
         }
 
         // POST: /api/auth/login
@@ -55,7 +60,7 @@ namespace FoodWebsite_API.Controllers
 
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
-                return Unauthorized("Invalid email or password.");
+                return Unauthorized(new {message = "Email hoặc mật khẩu không đúng."});
 
             var token = await GenerateJwtToken(user);
             return Ok(new { token });
@@ -71,11 +76,11 @@ namespace FoodWebsite_API.Controllers
 
             var email = User.FindFirstValue(ClaimTypes.Email);
             if (email == null)
-                return Unauthorized("Cannot find email from token.");
+                return Unauthorized("Không thể tìm thấy email từ token.");
 
             var user = await _userManager.FindByEmailAsync(email);
             if (user == null)
-                return NotFound("User not found.");
+                return NotFound("Người dùng không tồn tại.");
 
             return Ok(new
             {
