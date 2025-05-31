@@ -29,14 +29,15 @@ namespace FoodWebsite_API.Controllers
                 })
                 .OrderByDescending(x => x.ViewCount)
                 .Take(top)
-                .Join(_context.Specialties,
+                .Join(_context.Specialties.Include(s => s.SpecialtyImages),
                       g => g.SpecialtyId,
                       s => s.Id,
                       (g, s) => new
                       {
                           SpecialtyId = g.SpecialtyId,
                           SpecialtyName = s.Name,
-                          ViewCount = g.ViewCount
+                          ViewCount = g.ViewCount,
+                          Image = s.SpecialtyImages.FirstOrDefault().ImageUrl
                       })
                 .ToListAsync();
 
