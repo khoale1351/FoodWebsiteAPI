@@ -124,44 +124,6 @@ namespace FoodWebsite_API.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
-        }
-
-        [HttpGet("top-specialties")]
-        public async Task<ActionResult<IEnumerable<object>>> GetTopSpecialties(int top = 5)
-        {
-            var topSpecialties = await _context.UserViewHistories
-                .Where(h => h.SpecialtyId != null)
-                .GroupBy(h => h.SpecialtyId)
-                .OrderByDescending(g => g.Count())
-                .Take(top)
-                .Select(g => new
-                {
-                    SpecialtyId = g.Key,
-                    Count = g.Count(),
-                    Name = _context.Specialties.Where(s => s.Id == g.Key).Select(s => s.Name).FirstOrDefault()
-                })
-                .ToListAsync();
-
-            return Ok(topSpecialties);
-        }
-
-        [HttpGet("top-recipes")]
-        public async Task<ActionResult<IEnumerable<object>>> GetTopRecipes(int top = 5)
-        {
-            var topRecipes = await _context.UserViewHistories
-                .Where(h => h.RecipeId != null)
-                .GroupBy(h => h.RecipeId)
-                .OrderByDescending(g => g.Count())
-                .Take(top)
-                .Select(g => new
-                {
-                    RecipeId = g.Key,
-                    Count = g.Count(),
-                    Name = _context.Recipes.Where(r => r.Id == g.Key).Select(r => r.Name).FirstOrDefault()
-                })
-                .ToListAsync();
-
-            return Ok(topRecipes);
-        }
+        }       
     }
 }
