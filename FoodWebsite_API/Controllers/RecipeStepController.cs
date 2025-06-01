@@ -18,6 +18,7 @@ namespace FoodWebsite_API.Controllers
         }
 
         // GET: api/recipes/{recipeId}/steps
+        // Lấy các bước nấu của công thức
         [HttpGet]
         public async Task<ActionResult<IEnumerable<RecipeStepReadDTO>>> GetRecipeSteps(int recipeId)
         {

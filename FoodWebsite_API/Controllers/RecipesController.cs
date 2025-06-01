@@ -13,12 +13,73 @@ namespace FoodWebsite_API.Controllers
     public class RecipesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _environment;
+        private readonly string[] _allowedImageExtensions = { ".jpg", ".jpeg", ".png", ".webp" };
+        private readonly long _maxFileSize = 5 * 1024 * 1024; // 5MB
 
-        public RecipesController(ApplicationDbContext context)
+        public RecipesController(ApplicationDbContext context, IWebHostEnvironment environment)
         {
             _context = context;
+            _environment = environment;
         }
-        
+
+        private async Task<string?> SaveImageAsync(IFormFile imageFile, int recipeId, int? stepId = null, int? stepNumber = null)
+        {
+            if (imageFile == null || imageFile.Length == 0)
+                return null;
+
+            // Validate file size
+            if (imageFile.Length > _maxFileSize)
+                throw new InvalidOperationException($"File size exceeds maximum allowed size of {_maxFileSize / (1024 * 1024)}MB");
+
+            // Validate file extension
+            var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
+            if (!_allowedImageExtensions.Contains(extension))
+                throw new InvalidOperationException($"Invalid file format. Allowed formats: {string.Join(", ", _allowedImageExtensions)}");
+
+            // Create upload directory if it doesn't exist
+            var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "recipes");
+            if (!Directory.Exists(uploadsFolder))
+                Directory.CreateDirectory(uploadsFolder);
+
+            // Generate unique filename
+            var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            var randomString = Guid.NewGuid().ToString("N")[..8];
+
+            string fileName;
+            if (stepId.HasValue && stepNumber.HasValue)
+            {
+                fileName = $"{recipeId}-{stepId}.{stepNumber}-{timestamp}-{randomString}{extension}";
+            }
+            else
+            {
+                fileName = $"{recipeId}-main-{timestamp}-{randomString}{extension}";
+            }
+
+            var filePath = Path.Combine(uploadsFolder, fileName);
+
+            // Save file
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await imageFile.CopyToAsync(stream);
+            }
+
+            // Return relative path for storing in database
+            return $"/uploads/recipes/{fileName}";
+        }
+
+        private void DeleteImage(string? imagePath)
+        {
+            if (string.IsNullOrEmpty(imagePath))
+                return;
+
+            var fullPath = Path.Combine(_environment.WebRootPath, imagePath.TrimStart('/'));
+            if (System.IO.File.Exists(fullPath))
+            {
+                System.IO.File.Delete(fullPath);
+            }
+        }
+
         //Lấy danh sách công thức với tính năng lọc, sắp xếp và phân trang
         [HttpGet]
         public async Task<ActionResult<IEnumerable<RecipeSummaryDTO>>> GetRecipes(
