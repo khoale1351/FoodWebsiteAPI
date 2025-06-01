@@ -2,6 +2,8 @@
 using FoodWebsite_API.DTOs.Province;
 using FoodWebsite_API.DTOs.Rating;
 using FoodWebsite_API.DTOs.Recipe;
+using FoodWebsite_API.DTOs.RecipeIngredient;
+using FoodWebsite_API.DTOs.RecipeStep;
 using FoodWebsite_API.DTOs.Specialty;
 using FoodWebsite_API.DTOs.SpecialtyImages;
 using FoodWebsite_API.DTOs.UserViewHistory;
@@ -30,6 +32,10 @@ namespace FoodWebsite_API.Controllers
                 .Include(s => s.Province)
                 .Include(s => s.SpecialtyImages)
                 .Include(s => s.Recipes)
+                    .ThenInclude(r => r.RecipeSteps)
+                .Include(s => s.Recipes)
+                    .ThenInclude(r => r.RecipeIngredients)
+                        .ThenInclude(i => i.Ingredient)
                 .Include(s => s.Ratings);
 
             if (provinceId.HasValue)
@@ -77,10 +83,31 @@ namespace FoodWebsite_API.Controllers
                 Recipes = s.Recipes.Select(r => new RecipeDetailDTO
                 {
                     Id = r.Id,
+                    SpecialtyId = r.SpecialtyId,
                     Name = r.Name,
+                    NamePlain = r.NamePlain,
                     Description = r.Description,
-                    IsOriginal = r.IsOriginal
-                    // Thêm các field khác nếu có trong DTO
+                    IsOriginal = r.IsOriginal,
+                    PrepareTime = r.PrepareTime,
+                    CookingTime = r.CookingTime,
+                    CreatedAt = r.CreatedAt,
+                    UpdatedAt = r.UpdatedAt,
+                    SpecialtyName = s.Name,
+                    RecipeSteps = r.RecipeSteps.Select(rs => new RecipeStepReadDTO
+                    {
+                        Id = rs.Id,
+                        RecipeId = rs.RecipeId,
+                        StepNumber = rs.StepNumber,
+                        Description = rs.Description,
+                        ImageUrl = rs.ImageUrl
+                    }).OrderBy(rs => rs.StepNumber).ToList(),
+                    RecipeIngredients = r.RecipeIngredients.Select(ri => new RecipeIngredientReadDTO
+                    {
+                        RecipeId = ri.RecipeId,
+                        IngredientName = ri.Ingredient?.Name ?? string.Empty,
+                        Quantity = ri.Quantity,
+                        Unit = ri.Unit
+                    }).ToList(),
                 }).ToList()             
             }).ToList();
 
@@ -95,6 +122,10 @@ namespace FoodWebsite_API.Controllers
                 .Include(s => s.Province)
                 .Include(s => s.SpecialtyImages)
                 .Include(s => s.Recipes)
+                    .ThenInclude(r => r.RecipeSteps)
+                .Include(s => s.Recipes)
+                    .ThenInclude(r => r.RecipeIngredients)
+                        .ThenInclude(i => i.Ingredient)
                 .Include(s => s.Ratings)
                 .FirstOrDefaultAsync(x => x.Id == id);
 
@@ -126,8 +157,31 @@ namespace FoodWebsite_API.Controllers
                 Recipes = s.Recipes.Select(r => new RecipeDetailDTO
                 {
                     Id = r.Id,
+                    SpecialtyId = r.SpecialtyId,
                     Name = r.Name,
-                    Description = r.Description
+                    NamePlain = r.NamePlain,
+                    Description = r.Description,
+                    IsOriginal = r.IsOriginal,
+                    PrepareTime = r.PrepareTime,
+                    CookingTime = r.CookingTime,
+                    CreatedAt = r.CreatedAt,
+                    UpdatedAt = r.UpdatedAt,
+                    SpecialtyName = s.Name,
+                    RecipeSteps = r.RecipeSteps.Select(rs => new RecipeStepReadDTO
+                    {
+                        Id = rs.Id,
+                        RecipeId = rs.RecipeId,
+                        StepNumber = rs.StepNumber,
+                        Description = rs.Description,
+                        ImageUrl = rs.ImageUrl
+                    }).OrderBy(rs => rs.StepNumber).ToList(),
+                    RecipeIngredients = r.RecipeIngredients.Select(ri => new RecipeIngredientReadDTO
+                    {
+                        RecipeId = ri.RecipeId,
+                        IngredientName = ri.Ingredient?.Name ?? string.Empty,
+                        Quantity = ri.Quantity,
+                        Unit = ri.Unit
+                    }).ToList(),
                 }).ToList()
             };
 
@@ -204,6 +258,10 @@ namespace FoodWebsite_API.Controllers
                 .Include(s => s.Province)
                 .Include(s => s.SpecialtyImages)
                 .Include(s => s.Recipes)
+                    .ThenInclude(r => r.RecipeSteps)
+                .Include(s => s.Recipes)
+                    .ThenInclude(r => r.RecipeIngredients)
+                        .ThenInclude(i => i.Ingredient)
                 .Include(s => s.Ratings)
                 .FirstOrDefaultAsync(s => s.Id == id);
 
@@ -246,21 +304,34 @@ namespace FoodWebsite_API.Controllers
                     UpdatedAt = r.UpdatedAt
                 }).ToList(),
 
-                Recipes = specialty.Recipes.Select(recipe => new RecipeDetailDTO
+                Recipes = specialty.Recipes.Select(r => new RecipeDetailDTO
                 {
-                    Id = recipe.Id,
-                    SpecialtyId = recipe.SpecialtyId,
-                    Name = recipe.Name,
-                    NamePlain = recipe.NamePlain,
-                    IsOriginal = recipe.IsOriginal,
-                    PrepareTime = recipe.PrepareTime,
-                    CookingTime = recipe.CookingTime,
-                    Description = recipe.Description,
-                    IsApproved = recipe.IsApproved,
-                    CreatedAt = recipe.CreatedAt,
-                    UpdatedAt = recipe.UpdatedAt,
-                    FavoriteCount = recipe.UserFavoriteRecipes.Count,
-                    ViewCount = recipe.UserViewHistories.Count
+                    Id = r.Id,
+                    SpecialtyId = r.SpecialtyId,
+                    Name = r.Name,
+                    NamePlain = r.NamePlain,
+                    Description = r.Description,
+                    IsOriginal = r.IsOriginal,
+                    PrepareTime = r.PrepareTime,
+                    CookingTime = r.CookingTime,
+                    CreatedAt = r.CreatedAt,
+                    UpdatedAt = r.UpdatedAt,
+                    SpecialtyName = specialty.Name,
+                    RecipeSteps = r.RecipeSteps.Select(rs => new RecipeStepReadDTO
+                    {
+                        Id = rs.Id,
+                        RecipeId = rs.RecipeId,
+                        StepNumber = rs.StepNumber,
+                        Description = rs.Description,
+                        ImageUrl = rs.ImageUrl
+                    }).OrderBy(rs => rs.StepNumber).ToList(),
+                    RecipeIngredients = r.RecipeIngredients.Select(ri => new RecipeIngredientReadDTO
+                    {
+                        RecipeId = ri.RecipeId,
+                        IngredientName = ri.Ingredient?.Name ?? string.Empty,
+                        Quantity = ri.Quantity,
+                        Unit = ri.Unit
+                    }).ToList(),
                 }).ToList()
             };
 
