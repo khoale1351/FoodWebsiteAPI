@@ -239,7 +239,7 @@ namespace FoodWebsite_API.Controllers
                     SpecialtyId = i.Id,
                     ImageUrl = i.ImageUrl
                 }).ToList(),
-                Recipes = s.Recipes.Select(r => new RecipeReadDTO
+                Recipes = s.Recipes.Select(r => new RecipeDetailDTO
                 {
                     Id = r.Id,
                     Name = r.Name,

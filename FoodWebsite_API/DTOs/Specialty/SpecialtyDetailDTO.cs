@@ -26,7 +26,7 @@ namespace FoodWebsite_API.DTOs.Specialty
         public List<SpecialtyImagesReadDTO> SpecialtyImages { get; set; } = new();
 
         // Danh sách công thức nấu ăn liên quan
-        public List<RecipeReadDTO> Recipes { get; set; } = new();
+        public List<RecipeDetailDTO> Recipes { get; set; } = new();
 
         // Danh sách đánh giá người dùng
         public List<RatingReadDTO> Ratings { get; set; } = new();

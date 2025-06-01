@@ -1,9 +1,8 @@
-﻿namespace FoodWebsite_API.DTOs.Recipe
+﻿    namespace FoodWebsite_API.DTOs.Recipe
 {
-    public class RecipeReadDTO
+    public class RecipeSummaryDTO
     {
         public int Id { get; set; }
-        public int SpecialtyId { get; set; }
         public string Name { get; set; } = null!;
         public string? NamePlain { get; set; }
         public bool IsOriginal { get; set; }
@@ -12,9 +11,8 @@
         public string? Description { get; set; }
         public bool IsApproved { get; set; }
         public DateTime? CreatedAt { get; set; }
-        public DateTime? UpdatedAt { get; set; }
-
-        public int FavoriteCount { get; set; }
-        public int ViewCount { get; set; }
+        public string SpecialtyName { get; set; } = null!;
+        public int TotalSteps { get; set; }
+        public int TotalIngredients { get; set; }
     }
 }

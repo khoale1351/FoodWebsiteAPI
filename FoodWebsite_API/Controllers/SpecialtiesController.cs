@@ -64,7 +64,7 @@ namespace FoodWebsite_API.Controllers
                     ImageUrl = i.ImageUrl
                     // Thêm các field khác nếu có trong DTO
                 }).ToList(),
-                Recipes = s.Recipes.Select(r => new RecipeReadDTO
+                Recipes = s.Recipes.Select(r => new RecipeDetailDTO
                 {
                     Id = r.Id,
                     Name = r.Name,
@@ -112,7 +112,7 @@ namespace FoodWebsite_API.Controllers
                     SpecialtyId = i.SpecialtyId,
                     ImageUrl = i.ImageUrl
                 }).ToList(),
-                Recipes = s.Recipes.Select(r => new RecipeReadDTO
+                Recipes = s.Recipes.Select(r => new RecipeDetailDTO
                 {
                     Id = r.Id,
                     Name = r.Name,
@@ -235,7 +235,7 @@ namespace FoodWebsite_API.Controllers
                     UpdatedAt = r.UpdatedAt
                 }).ToList(),
 
-                Recipes = specialty.Recipes.Select(recipe => new RecipeReadDTO
+                Recipes = specialty.Recipes.Select(recipe => new RecipeDetailDTO
                 {
                     Id = recipe.Id,
                     SpecialtyId = recipe.SpecialtyId,
