@@ -14,6 +14,6 @@ namespace FoodWebsite_API.DTOs.RecipeStep
         [StringLength(1000)]
         public string Description { get; set; } = null!;
 
-        public string? ImageUrl { get; set; }
+        public IFormFile Image { get; set; }
     }
 }

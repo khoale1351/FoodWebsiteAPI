@@ -13,5 +13,6 @@ namespace FoodWebsite_API.DTOs.RecipeStep
         public string Description { get; set; } = null!;
 
         public string? ImageUrl { get; set; }
+        public IFormFile? Image { get; set; }
     }
 }

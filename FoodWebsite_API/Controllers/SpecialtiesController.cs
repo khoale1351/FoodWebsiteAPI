@@ -24,7 +24,7 @@ namespace FoodWebsite_API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<SpecialtyDetailDTO>>> GetAllOrByProvince([FromQuery] int? provinceId)
+        public async Task<ActionResult<IEnumerable<SpecialtyDetailDTO>>> GetAllOrByProvince([FromQuery] int? provinceId, [FromQuery] string? region)
         {
             IQueryable<Specialty> query = _context.Specialties
                 .Include(s => s.Province)
@@ -37,6 +37,12 @@ namespace FoodWebsite_API.Controllers
                 query = query.Where(s => s.ProvinceId == provinceId.Value);
             }
 
+            if (!string.IsNullOrWhiteSpace(region))
+            {
+                string regionSearch = SlugHelper.RemoveDiacritics(region);
+                query = query.Where(s => s.Province != null && s.Province.Region != null && s.Province.RegionPlain == regionSearch);
+            }
+
             var specialties = await query.ToListAsync();
 
             var result = specialties.Select(s => new SpecialtyDetailDTO
@@ -47,14 +53,19 @@ namespace FoodWebsite_API.Controllers
                 Description = s.Description,
                 ProvinceId = s.ProvinceId,
                 ProvinceName = s.Province?.Name,
+                Region = s.Province?.Region,
+                RegionPlain = s.Province?.RegionPlain,
                 CreatedAt = s.CreatedAt,
                 UpdatedAt = s.UpdatedAt,
                 IsActive = s.IsActive,
                 Province = s.Province != null ? new ProvinceReadDTO
                 {
                     Id = s.Province.Id,
-                    Name = s.Province.Name
-                    // Thêm các field khác nếu có trong ProvinceReadDTO
+                    Region = s.Province.Region,
+                    Name = s.Province.Name,
+                    Description = s.Province.Description,
+                    Version = s.Province.Version,
+                    IsActive = s.Province.IsActive,
                 } : null,
                 ImageUrls = s.SpecialtyImages.Select(i => i.ImageUrl).ToList(),
                 SpecialtyImages = s.SpecialtyImages.Select(i => new SpecialtyImagesReadDTO
@@ -62,13 +73,13 @@ namespace FoodWebsite_API.Controllers
                     Id = i.Id,
                     SpecialtyId = i.SpecialtyId,
                     ImageUrl = i.ImageUrl
-                    // Thêm các field khác nếu có trong DTO
                 }).ToList(),
                 Recipes = s.Recipes.Select(r => new RecipeDetailDTO
                 {
                     Id = r.Id,
                     Name = r.Name,
                     Description = r.Description,
+                    IsOriginal = r.IsOriginal
                     // Thêm các field khác nếu có trong DTO
                 }).ToList()             
             }).ToList();

@@ -13,86 +13,14 @@ namespace FoodWebsite_API.Controllers
     public class RecipesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private readonly IWebHostEnvironment _environment;
-        private readonly string[] _allowedImageExtensions = { ".jpg", ".jpeg", ".png", ".webp" };
-        private readonly long _maxFileSize = 5 * 1024 * 1024; // 5MB
 
-        public RecipesController(ApplicationDbContext context, IWebHostEnvironment environment)
+        public RecipesController(ApplicationDbContext context)
         {
             _context = context;
-            _environment = environment;
         }
 
-        private async Task<string?> SaveImageAsync(IFormFile imageFile, int recipeId, int? stepId = null, int? stepNumber = null)
-        {
-            if (imageFile == null || imageFile.Length == 0)
-                return null;
-
-            // Validate file size
-            if (imageFile.Length > _maxFileSize)
-                throw new InvalidOperationException($"File size exceeds maximum allowed size of {_maxFileSize / (1024 * 1024)}MB");
-
-            // Validate file extension
-            var extension = Path.GetExtension(imageFile.FileName).ToLowerInvariant();
-            if (!_allowedImageExtensions.Contains(extension))
-                throw new InvalidOperationException($"Invalid file format. Allowed formats: {string.Join(", ", _allowedImageExtensions)}");
-
-            // Create upload directory if it doesn't exist
-            var uploadsFolder = Path.Combine(_environment.WebRootPath, "uploads", "recipes");
-            if (!Directory.Exists(uploadsFolder))
-                Directory.CreateDirectory(uploadsFolder);
-
-            // Generate unique filename
-            var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            var randomString = Guid.NewGuid().ToString("N")[..8];
-
-            string fileName;
-            if (stepId.HasValue && stepNumber.HasValue)
-            {
-                fileName = $"{recipeId}-{stepId}.{stepNumber}-{timestamp}-{randomString}{extension}";
-            }
-            else
-            {
-                fileName = $"{recipeId}-main-{timestamp}-{randomString}{extension}";
-            }
-
-            var filePath = Path.Combine(uploadsFolder, fileName);
-
-            // Save file
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await imageFile.CopyToAsync(stream);
-            }
-
-            // Return relative path for storing in database
-            return $"/uploads/recipes/{fileName}";
-        }
-
-        private void DeleteImage(string? imagePath)
-        {
-            if (string.IsNullOrEmpty(imagePath))
-                return;
-
-            var fullPath = Path.Combine(_environment.WebRootPath, imagePath.TrimStart('/'));
-            if (System.IO.File.Exists(fullPath))
-            {
-                System.IO.File.Delete(fullPath);
-            }
-        }
-
-        //Lấy danh sách công thức với tính năng lọc, sắp xếp và phân trang
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<RecipeSummaryDTO>>> GetRecipes(
-            [FromQuery] string? searchTerm = null,
-            [FromQuery] int? specialtyId = null,
-            [FromQuery] bool? isOriginal = null,
-            [FromQuery] bool? isApproved = true,
-            [FromQuery] int? maxPrepareTime = null,
-            [FromQuery] int? maxCookingTime = null,
-            [FromQuery] string sortBy = "CreatedAt",
-            [FromQuery] bool sortDescending = true,
-            [FromQuery] int pageNumber = 1,
-            [FromQuery] int pageSize = 12)
+        public async Task<ActionResult<IEnumerable<RecipeSummaryDTO>>> GetRecipes([FromQuery] RecipeFilterDTO filter)
         {
             var query = _context.Recipes
                 .Include(r => r.Specialty)
@@ -100,42 +28,40 @@ namespace FoodWebsite_API.Controllers
                 .Include(r => r.RecipeIngredients)
                 .AsQueryable();
 
-            if (!string.IsNullOrEmpty(searchTerm))
+            if (!string.IsNullOrEmpty(filter.SearchTerm))
             {
-                query = query.Where(r => r.Name.Contains(searchTerm) ||
-                                   (r.NamePlain != null && r.NamePlain.Contains(searchTerm)) ||
-                                   (r.Description != null && r.Description.Contains(searchTerm)));
+                query = query.Where(r => r.Name.Contains(filter.SearchTerm) ||
+                                         (r.NamePlain != null && r.NamePlain.Contains(filter.SearchTerm)) ||
+                                         (r.Description != null && r.Description.Contains(filter.SearchTerm)));
             }
 
-            if (specialtyId.HasValue)
-                query = query.Where(r => r.SpecialtyId == specialtyId.Value);
+            if (filter.SpecialtyId.HasValue)
+                query = query.Where(r => r.SpecialtyId == filter.SpecialtyId);
 
-            if (isOriginal.HasValue)
-                query = query.Where(r => r.IsOriginal == isOriginal.Value);
+            if (filter.IsOriginal.HasValue)
+                query = query.Where(r => r.IsOriginal == filter.IsOriginal);
 
-            if (isApproved.HasValue)
-                query = query.Where(r => r.IsApproved == isApproved.Value);
+            if (filter.IsApproved.HasValue)
+                query = query.Where(r => r.IsApproved == filter.IsApproved);
 
-            if (maxPrepareTime.HasValue)
-                query = query.Where(r => r.PrepareTime <= maxPrepareTime.Value);
+            if (filter.MaxPrepareTime.HasValue)
+                query = query.Where(r => r.PrepareTime <= filter.MaxPrepareTime);
 
-            if (maxCookingTime.HasValue)
-                query = query.Where(r => r.CookingTime <= maxCookingTime.Value);
+            if (filter.MaxCookingTime.HasValue)
+                query = query.Where(r => r.CookingTime <= filter.MaxCookingTime);
 
-            // Sort
-            query = sortBy.ToLower() switch
+            query = filter.SortBy?.ToLower() switch
             {
-                "name" => sortDescending ? query.OrderByDescending(r => r.Name) : query.OrderBy(r => r.Name),
-                "cookingtime" => sortDescending ? query.OrderByDescending(r => r.CookingTime) : query.OrderBy(r => r.CookingTime),
-                "preparetime" => sortDescending ? query.OrderByDescending(r => r.PrepareTime) : query.OrderBy(r => r.PrepareTime),
-                _ => sortDescending ? query.OrderByDescending(r => r.CreatedAt) : query.OrderBy(r => r.CreatedAt)
+                "name" => filter.SortDescending ? query.OrderByDescending(r => r.Name) : query.OrderBy(r => r.Name),
+                "cookingtime" => filter.SortDescending ? query.OrderByDescending(r => r.CookingTime) : query.OrderBy(r => r.CookingTime),
+                "preparetime" => filter.SortDescending ? query.OrderByDescending(r => r.PrepareTime) : query.OrderBy(r => r.PrepareTime),
+                _ => filter.SortDescending ? query.OrderByDescending(r => r.CreatedAt) : query.OrderBy(r => r.CreatedAt)
             };
 
-            // Phân trang
             var totalItems = await query.CountAsync();
             var recipes = await query
-                .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
+                .Skip((filter.PageNumber - 1) * filter.PageSize)
+                .Take(filter.PageSize)
                 .Select(r => new RecipeSummaryDTO
                 {
                     Id = r.Id,
@@ -154,28 +80,28 @@ namespace FoodWebsite_API.Controllers
                 .ToListAsync();
 
             Response.Headers.Add("X-Total-Count", totalItems.ToString());
-            Response.Headers.Add("X-Page-Number", pageNumber.ToString());
-            Response.Headers.Add("X-Page-Size", pageSize.ToString());
-            Response.Headers.Add("X-Total-Pages", ((int)Math.Ceiling((double)totalItems / pageSize)).ToString());
+            Response.Headers.Add("X-Page-Number", filter.PageNumber.ToString());
+            Response.Headers.Add("X-Page-Size", filter.PageSize.ToString());
+            Response.Headers.Add("X-Total-Pages", ((int)Math.Ceiling((double)totalItems / filter.PageSize)).ToString());
 
             return Ok(recipes);
         }
 
-        // Lấy chi tiết công thức
         [HttpGet("{id}")]
         public async Task<ActionResult<RecipeDetailDTO>> GetRecipe(int id)
         {
             var recipe = await _context.Recipes
                 .Include(r => r.Specialty)
                 .Include(r => r.RecipeSteps)
-                .Include(r => r.RecipeIngredients)
-                    .ThenInclude(ri => ri.Ingredient)
+                .Include(r => r.RecipeIngredients).ThenInclude(ri => ri.Ingredient)
                 .FirstOrDefaultAsync(r => r.Id == id);
 
-            if (recipe == null)
-                return NotFound(new { message = "Recipe not found" });
+            if (recipe == null) return NotFound(new { message = "Recipe not found" });
 
-            var recipeDto = new RecipeDetailDTO
+            var favoriteCount = await _context.UserFavoriteRecipes.CountAsync(f => f.RecipeId == id);
+            var viewCount = await _context.UserViewHistories.CountAsync(v => v.RecipeId == id);
+
+            return Ok(new RecipeDetailDTO
             {
                 Id = recipe.Id,
                 SpecialtyId = recipe.SpecialtyId,
@@ -189,312 +115,164 @@ namespace FoodWebsite_API.Controllers
                 CreatedAt = recipe.CreatedAt,
                 UpdatedAt = recipe.UpdatedAt,
                 SpecialtyName = recipe.Specialty.Name,
-                RecipeSteps = recipe.RecipeSteps
-                    .OrderBy(s => s.StepNumber)
-                    .Select(s => new RecipeStepReadDTO
-                    {
-                        Id = s.Id,
-                        RecipeId = s.RecipeId,
-                        StepNumber = s.StepNumber,
-                        Description = s.Description,
-                        ImageUrl = s.ImageUrl
-                    }).ToList(),
-                RecipeIngredients = recipe.RecipeIngredients
-                    .Select(ri => new RecipeIngredientReadDTO
-                    {
-                        RecipeId = ri.RecipeId,
-                        IngredientId = ri.IngredientId,
-                        IngredientName = ri.Ingredient.Name,
-                        Quantity = ri.Quantity,
-                        Unit = ri.Unit
-                    }).ToList()
-            };
-
-            return Ok(recipeDto);
+                FavoriteCount = favoriteCount,
+                ViewCount = viewCount,
+                RecipeSteps = recipe.RecipeSteps.OrderBy(s => s.StepNumber).Select(s => new RecipeStepReadDTO
+                {
+                    Id = s.Id,
+                    RecipeId = s.RecipeId,
+                    StepNumber = s.StepNumber,
+                    Description = s.Description,
+                    ImageUrl = s.ImageUrl
+                }).ToList(),
+                RecipeIngredients = recipe.RecipeIngredients.Select(ri => new RecipeIngredientReadDTO
+                {
+                    RecipeId = ri.RecipeId,
+                    IngredientId = ri.IngredientId,
+                    IngredientName = ri.Ingredient.Name,
+                    Quantity = ri.Quantity,
+                    Unit = ri.Unit
+                }).ToList()
+            });
         }
+
 
         [HttpPost]
-        public async Task<ActionResult<RecipeDetailDTO>> CreateRecipe(RecipeCreateDTO createRecipeDto)
+        public async Task<ActionResult> PostRecipe(RecipeCreateDTO dto)
         {
-            // Kiểm tra tồn tại đặc sản
-            var specialtyExists = await _context.Specialties.AnyAsync(s => s.Id == createRecipeDto.SpecialtyId);
-            if (!specialtyExists)
-                return BadRequest(new { message = "Specialty not found" });
-
-            // Kiểm tra tồn tại nguyên liệu
-            var ingredientIds = createRecipeDto.RecipeIngredients.Select(ri => ri.IngredientId).ToList();
-            var existingIngredients = await _context.Ingredients
-                .Where(i => ingredientIds.Contains(i.Id))
-                .Select(i => i.Id)
-                .ToListAsync();
-
-            var missingIngredients = ingredientIds.Except(existingIngredients).ToList();
-            if (missingIngredients.Any())
-                return BadRequest(new { message = $"Ingredients not found: {string.Join(", ", missingIngredients)}" });
-
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            try
+            var recipe = new Recipe
             {
-                var recipe = new Recipe
-                {
-                    SpecialtyId = createRecipeDto.SpecialtyId,
-                    Name = createRecipeDto.Name,
-                    NamePlain = createRecipeDto.NamePlain,
-                    IsOriginal = createRecipeDto.IsOriginal,
-                    PrepareTime = createRecipeDto.PrepareTime,
-                    CookingTime = createRecipeDto.CookingTime,
-                    Description = createRecipeDto.Description,
-                    IsApproved = false,
-                    CreatedAt = DateTime.UtcNow
-                };
+                SpecialtyId = dto.SpecialtyId,
+                Name = dto.Name,
+                NamePlain = dto.NamePlain,
+                IsOriginal = dto.IsOriginal,
+                PrepareTime = dto.PrepareTime,
+                CookingTime = dto.CookingTime,
+                Description = dto.Description,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                IsApproved = false
+            };
 
-                _context.Recipes.Add(recipe);
-                await _context.SaveChangesAsync();
+            _context.Recipes.Add(recipe);
+            await _context.SaveChangesAsync();
 
-                // Thêm bước nấu
-                foreach (var stepDto in createRecipeDto.RecipeSteps)
-                {
-                    var step = new RecipeStep
-                    {
-                        RecipeId = recipe.Id,
-                        StepNumber = stepDto.StepNumber,
-                        Description = stepDto.Description,
-                        ImageUrl = stepDto.ImageUrl
-                    };
-                    _context.RecipeSteps.Add(step);
-                }
-
-                // Thêm nguyên liệu của công thức
-                foreach (var ingredientDto in createRecipeDto.RecipeIngredients)
-                {
-                    var recipeIngredient = new RecipeIngredient
-                    {
-                        RecipeId = recipe.Id,
-                        IngredientId = ingredientDto.IngredientId,
-                        Quantity = ingredientDto.Quantity,
-                        Unit = ingredientDto.Unit
-                    };
-                    _context.RecipeIngredients.Add(recipeIngredient);
-                }
-
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-                return await GetRecipe(recipe.Id);
-            }
-            catch
+            foreach (var stepDto in dto.RecipeSteps)
             {
-                await transaction.RollbackAsync();
-                return StatusCode(500, new { message = "Error creating recipe" });
+                _context.RecipeSteps.Add(new RecipeStep
+                {
+                    RecipeId = recipe.Id,
+                    StepNumber = stepDto.StepNumber,
+                    Description = stepDto.Description,
+                    ImageUrl = stepDto.ImageUrl
+                });
             }
+
+            foreach (var ingDto in dto.RecipeIngredients)
+            {
+                _context.RecipeIngredients.Add(new RecipeIngredient
+                {
+                    RecipeId = recipe.Id,
+                    IngredientId = ingDto.IngredientId,
+                    Quantity = ingDto.Quantity,
+                    Unit = ingDto.Unit
+                });
+            }
+
+            await _context.SaveChangesAsync();
+            return CreatedAtAction(nameof(GetRecipe), new { id = recipe.Id }, null);
         }
 
-        // PUT: api/recipes/{id}
         [HttpPut("{id}")]
-        public async Task<ActionResult<RecipeDetailDTO>> UpdateRecipe(int id, RecipeUpdateDTO updateRecipeDto)
+        public async Task<IActionResult> PutRecipe(int id, RecipeCreateDTO dto)
         {
-            var recipe = await _context.Recipes
-                .Include(r => r.RecipeSteps)
-                .Include(r => r.RecipeIngredients)
-                .FirstOrDefaultAsync(r => r.Id == id);
+            var recipe = await _context.Recipes.Include(r => r.RecipeSteps).Include(r => r.RecipeIngredients).FirstOrDefaultAsync(r => r.Id == id);
+            if (recipe == null) return NotFound();
 
-            if (recipe == null)
-                return NotFound(new { message = "Recipe not found" });
+            recipe.SpecialtyId = dto.SpecialtyId;
+            recipe.Name = dto.Name;
+            recipe.NamePlain = dto.NamePlain;
+            recipe.IsOriginal = dto.IsOriginal;
+            recipe.PrepareTime = dto.PrepareTime;
+            recipe.CookingTime = dto.CookingTime;
+            recipe.Description = dto.Description;
+            recipe.UpdatedAt = DateTime.UtcNow;
 
-            // Kiểm tra tồn tại đặc sản
-            var specialtyExists = await _context.Specialties.AnyAsync(s => s.Id == updateRecipeDto.SpecialtyId);
-            if (!specialtyExists)
-                return BadRequest(new { message = "Specialty not found" });
+            _context.RecipeSteps.RemoveRange(recipe.RecipeSteps);
+            _context.RecipeIngredients.RemoveRange(recipe.RecipeIngredients);
+            await _context.SaveChangesAsync();
 
-            // Kiểm tra tồn tại nguyên liệu
-            var ingredientIds = updateRecipeDto.RecipeIngredients.Select(ri => ri.IngredientId).ToList();
-            var existingIngredients = await _context.Ingredients
-                .Where(i => ingredientIds.Contains(i.Id))
-                .Select(i => i.Id)
-                .ToListAsync();
-
-            var missingIngredients = ingredientIds.Except(existingIngredients).ToList();
-            if (missingIngredients.Any())
-                return BadRequest(new { message = $"Ingredients not found: {string.Join(", ", missingIngredients)}" });
-
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            try
+            foreach (var stepDto in dto.RecipeSteps)
             {
-                recipe.SpecialtyId = updateRecipeDto.SpecialtyId;
-                recipe.Name = updateRecipeDto.Name;
-                recipe.NamePlain = updateRecipeDto.NamePlain;
-                recipe.IsOriginal = updateRecipeDto.IsOriginal;
-                recipe.PrepareTime = updateRecipeDto.PrepareTime;
-                recipe.CookingTime = updateRecipeDto.CookingTime;
-                recipe.Description = updateRecipeDto.Description;
-                recipe.UpdatedAt = DateTime.UtcNow;
-
-                _context.RecipeSteps.RemoveRange(recipe.RecipeSteps);
-                _context.RecipeIngredients.RemoveRange(recipe.RecipeIngredients);
-
-                foreach (var stepDto in updateRecipeDto.RecipeSteps)
+                _context.RecipeSteps.Add(new RecipeStep
                 {
-                    var step = new RecipeStep
-                    {
-                        RecipeId = recipe.Id,
-                        StepNumber = stepDto.StepNumber,
-                        Description = stepDto.Description,
-                        ImageUrl = stepDto.ImageUrl
-                    };
-                    _context.RecipeSteps.Add(step);
-                }
-
-                foreach (var ingredientDto in updateRecipeDto.RecipeIngredients)
-                {
-                    var recipeIngredient = new RecipeIngredient
-                    {
-                        RecipeId = recipe.Id,
-                        IngredientId = ingredientDto.IngredientId,
-                        Quantity = ingredientDto.Quantity,
-                        Unit = ingredientDto.Unit
-                    };
-                    _context.RecipeIngredients.Add(recipeIngredient);
-                }
-
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-                return await GetRecipe(id);
+                    RecipeId = recipe.Id,
+                    StepNumber = stepDto.StepNumber,
+                    Description = stepDto.Description,
+                    ImageUrl = stepDto.ImageUrl
+                });
             }
-            catch
+
+            foreach (var ingDto in dto.RecipeIngredients)
             {
-                await transaction.RollbackAsync();
-                return StatusCode(500, new { message = "Error updating recipe" });
+                _context.RecipeIngredients.Add(new RecipeIngredient
+                {
+                    RecipeId = recipe.Id,
+                    IngredientId = ingDto.IngredientId,
+                    Quantity = ingDto.Quantity,
+                    Unit = ingDto.Unit
+                });
             }
+
+            await _context.SaveChangesAsync();
+            return NoContent();
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteRecipe(int id)
         {
             var recipe = await _context.Recipes.FindAsync(id);
-            if (recipe == null)
-                return NotFound(new { message = "Recipe not found" });
+            if (recipe == null) return NotFound();
 
             _context.Recipes.Remove(recipe);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Recipe deleted successfully" });
+            return NoContent();
         }
 
-        // POST: api/recipes/{id}/approve
-        // Duyệt công thức
         [HttpPost("{id}/approve")]
         public async Task<IActionResult> ApproveRecipe(int id)
         {
             var recipe = await _context.Recipes.FindAsync(id);
-            if (recipe == null)
-                return NotFound(new { message = "Recipe not found" });
+            if (recipe == null) return NotFound();
 
             recipe.IsApproved = true;
-            recipe.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Recipe approved successfully" });
+            return NoContent();
         }
 
-        // POST: api/recipes/{id}/reject
-        // Từ chối công thức
         [HttpPost("{id}/reject")]
         public async Task<IActionResult> RejectRecipe(int id)
         {
             var recipe = await _context.Recipes.FindAsync(id);
-            if (recipe == null)
-                return NotFound(new { message = "Recipe not found" });
+            if (recipe == null) return NotFound();
 
             recipe.IsApproved = false;
-            recipe.UpdatedAt = DateTime.UtcNow;
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "Recipe rejected successfully" });
+            return NoContent();
         }
 
-        // GET: api/recipes/popular
-        // Lấy công thức nổi bật (theo lượt xem)
-        [HttpGet("popular")]
-        public async Task<ActionResult<IEnumerable<RecipeSummaryDTO>>> GetPopularRecipes([FromQuery] int limit = 10)
+        [HttpGet("quick")]
+        public async Task<ActionResult<IEnumerable<RecipeSummaryDTO>>> GetQuickRecipes()
         {
-            var popularRecipes = await _context.Recipes
-                .Include(r => r.Specialty)
-                .Include(r => r.RecipeSteps)
-                .Include(r => r.RecipeIngredients)
-                .Include(r => r.UserViewHistories)
-                .Where(r => r.IsApproved)
-                .OrderByDescending(r => r.UserViewHistories.Count)
-                .ThenByDescending(r => r.CreatedAt)
-            .Take(limit)
-                .Select(r => new RecipeSummaryDTO
-                {
-                    Id = r.Id,
-                    Name = r.Name,
-                    NamePlain = r.NamePlain,
-                    IsOriginal = r.IsOriginal,
-                    PrepareTime = r.PrepareTime,
-                    CookingTime = r.CookingTime,
-                    Description = r.Description,
-                    IsApproved = r.IsApproved,
-                    CreatedAt = r.CreatedAt,
-                    SpecialtyName = r.Specialty.Name,
-                    TotalSteps = r.RecipeSteps.Count,
-                    TotalIngredients = r.RecipeIngredients.Count
-                })
-                .ToListAsync();
-
-            return Ok(popularRecipes);
-        }
-
-        // GET: api/recipes/latest
-        // Lấy công thức mới nhất
-        [HttpGet("latest")]
-        public async Task<ActionResult<IEnumerable<RecipeSummaryDTO>>> GetLatestRecipes([FromQuery] int limit = 10)
-        {
-            var latestRecipes = await _context.Recipes
-                .Include(r => r.Specialty)
-                .Include(r => r.RecipeSteps)
-                .Include(r => r.RecipeIngredients)
-                .Where(r => r.IsApproved)
-                .OrderByDescending(r => r.CreatedAt)
-            .Take(limit)
-                .Select(r => new RecipeSummaryDTO
-                {
-                    Id = r.Id,
-                    Name = r.Name,
-                    NamePlain = r.NamePlain,
-                    IsOriginal = r.IsOriginal,
-                    PrepareTime = r.PrepareTime,
-                    CookingTime = r.CookingTime,
-                    Description = r.Description,
-                    IsApproved = r.IsApproved,
-                    CreatedAt = r.CreatedAt,
-                    SpecialtyName = r.Specialty.Name,
-                    TotalSteps = r.RecipeSteps.Count,
-                    TotalIngredients = r.RecipeIngredients.Count
-                })
-                .ToListAsync();
-
-            return Ok(latestRecipes);
-        }
-
-        // GET: api/recipes/by-specialty/{specialtyId}
-        // Lấy công thức theo đặc sản
-        [HttpGet("by-specialty/{specialtyId}")]
-        public async Task<ActionResult<IEnumerable<RecipeSummaryDTO>>> GetRecipesBySpecialty(
-            int specialtyId,
-            [FromQuery] int limit = 20)
-        {
-            var specialtyExists = await _context.Specialties.AnyAsync(s => s.Id == specialtyId);
-            if (!specialtyExists)
-                return NotFound(new { message = "Specialty not found" });
-
+            int maxTotalTime = 30;
             var recipes = await _context.Recipes
                 .Include(r => r.Specialty)
                 .Include(r => r.RecipeSteps)
                 .Include(r => r.RecipeIngredients)
-                .Where(r => r.SpecialtyId == specialtyId && r.IsApproved)
-                .OrderByDescending(r => r.CreatedAt)
-            .Take(limit)
+                .Where(r => (r.PrepareTime ?? 0) + r.CookingTime <= maxTotalTime && r.IsApproved)
                 .Select(r => new RecipeSummaryDTO
                 {
                     Id = r.Id,
@@ -515,20 +293,14 @@ namespace FoodWebsite_API.Controllers
             return Ok(recipes);
         }
 
-        // GET: api/recipes/quick-recipes
-        // Lấy công thức nấu nhanh dưới 30 phút
-        [HttpGet("quick-recipes")]
-        public async Task<ActionResult<IEnumerable<RecipeSummaryDTO>>> GetQuickRecipes([FromQuery] int maxTotalTime = 30)
+        [HttpGet("original")]
+        public async Task<ActionResult<IEnumerable<RecipeSummaryDTO>>> GetOriginalRecipes()
         {
-            var quickRecipes = await _context.Recipes
+            var recipes = await _context.Recipes
                 .Include(r => r.Specialty)
                 .Include(r => r.RecipeSteps)
                 .Include(r => r.RecipeIngredients)
-                .Where(r => r.IsApproved &&
-                           (r.PrepareTime ?? 0) + r.CookingTime <= maxTotalTime)
-                .OrderBy(r => (r.PrepareTime ?? 0) + r.CookingTime)
-                .ThenByDescending(r => r.CreatedAt)
-            .Take(20)
+                .Where(r => r.IsOriginal && r.IsApproved)
                 .Select(r => new RecipeSummaryDTO
                 {
                     Id = r.Id,
@@ -546,7 +318,29 @@ namespace FoodWebsite_API.Controllers
                 })
                 .ToListAsync();
 
-            return Ok(quickRecipes);
+            return Ok(recipes);
+        }
+
+        [HttpPost("{id}/upload-step-image")]
+        public async Task<IActionResult> UploadStepImage(int id, int stepNumber, IFormFile file)
+        {
+            var recipeStep = await _context.RecipeSteps
+                .FirstOrDefaultAsync(rs => rs.RecipeId == id && rs.StepNumber == stepNumber);
+
+            if (recipeStep == null) return NotFound();
+
+            var fileName = $"step_{id}_{stepNumber}_{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            var filePath = Path.Combine("wwwroot/images/steps", fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            recipeStep.ImageUrl = $"/images/steps/{fileName}";
+            await _context.SaveChangesAsync();
+
+            return Ok(new { imageUrl = recipeStep.ImageUrl });
         }
     }
 }
