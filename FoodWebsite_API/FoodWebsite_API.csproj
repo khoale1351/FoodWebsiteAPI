@@ -25,7 +25,6 @@
   <ItemGroup>
     <Folder Include="DTOs\UserIngredient\" />
     <Folder Include="DTOs\UserFavoriteRecipe\" />
-    <Folder Include="DTOs\RecipeIngredient\" />
   </ItemGroup>
 
 </Project>

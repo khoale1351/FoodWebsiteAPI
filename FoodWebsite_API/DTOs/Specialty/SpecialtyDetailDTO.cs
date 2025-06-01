@@ -10,6 +10,11 @@ namespace FoodWebsite_API.DTOs.Specialty
     {
         public int Id { get; set; }
         public int ProvinceId { get; set; }
+
+        public string Region { get; set; } = null!;
+
+        public string? RegionPlain { get; set; }
+
         public string Name { get; set; } = null!;
         public string? NamePlain { get; set; }
         public string? Description { get; set; }
@@ -26,7 +31,7 @@ namespace FoodWebsite_API.DTOs.Specialty
         public List<SpecialtyImagesReadDTO> SpecialtyImages { get; set; } = new();
 
         // Danh sách công thức nấu ăn liên quan
-        public List<RecipeReadDTO> Recipes { get; set; } = new();
+        public List<RecipeDetailDTO> Recipes { get; set; } = new();
 
         // Danh sách đánh giá người dùng
         public List<RatingReadDTO> Ratings { get; set; } = new();
