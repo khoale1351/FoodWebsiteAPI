@@ -20,7 +20,7 @@ namespace FoodWebsite_API
 
             var jwtSettings = builder.Configuration.GetSection("Jwt");
             var secretKey = Environment.GetEnvironmentVariable("JWT__SecretKey") ?? jwtSettings["SecretKey"];
-            Console.WriteLine($"SecretKey Length: {secretKey.Length}");
+            //Console.WriteLine($"SecretKey Length: {secretKey.Length}");
             if (string.IsNullOrWhiteSpace(secretKey) || secretKey.Length < 32)
             {
                 throw new InvalidOperationException("JWT SecretKey is missing or too short. Use at least 32 characters.");
@@ -29,7 +29,7 @@ namespace FoodWebsite_API
             var keyBytes = Encoding.UTF8.GetBytes(secretKey);
             var key = new SymmetricSecurityKey(keyBytes);
             builder.Services.AddSingleton(key);
-            Console.WriteLine($"Using JWT SecretKey: {secretKey}");
+            //Console.WriteLine($"Using JWT SecretKey: {secretKey}");
 
             //SQL Connection
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");

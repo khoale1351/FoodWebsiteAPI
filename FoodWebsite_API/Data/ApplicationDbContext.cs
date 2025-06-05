@@ -36,6 +36,14 @@ namespace FoodWebsite_API.Data
             base.OnModelCreating(modelBuilder);
 
             // Relationships
+            modelBuilder.Entity<ApplicationUser>(entity =>
+            {
+                entity.Property(u => u.UserName).HasMaxLength(50);
+                entity.Property(u => u.City).HasMaxLength(100);
+                entity.Property(u => u.Address).HasMaxLength(300);
+                entity.Property(u => u.PhoneNumber).HasMaxLength(16).HasColumnType("varchar(16)");
+            });
+
             modelBuilder.Entity<Province>(entity =>
             {
                 entity.HasKey(e => e.Id).HasName("PK__Province__3214EC079C64CD5E");
